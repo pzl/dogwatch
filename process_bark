@@ -1,0 +1,11 @@
+#!/bin/bash
+while [ true ]; do
+    if find sounds/*.wav > /dev/null 2>&1; then
+        for i in sounds/*.wav; do
+            amp=$(sox -t .wav "$i" -n stat 2>&1 | grep "Maximum amplitude" | cut -d ':' -f 2 | tr -d ' ')
+            echo "$i @ $amp" >> bark.txt
+            mv "$i" "$i.done"
+        done
+    fi
+    sleep 1;
+done

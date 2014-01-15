@@ -1,0 +1,7 @@
+#!/bin/bash
+mkdir arch
+while [ true ]; do
+    sleep 1
+    mplayer -really-quiet -nosound -fps 30 -tv driver=v4l2:gain=1:width=640:height=480:device=/dev/video0:fps=30 -vo jpeg -frames 2 tv://
+    cp 00000002.jpg arch/$(date +"%F_%T").jpg
+done
