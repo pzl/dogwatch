@@ -60,7 +60,7 @@
 		  .append("g")
 		    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-		d3.json("bark.json", function(error, barks) {
+		d3.json("bark.txt", function(error, barks) {
 			var data = barks.data;
 		  data.forEach(function(d) {
 		    d.date = parseDate(d.time);
