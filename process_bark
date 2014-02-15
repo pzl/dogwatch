@@ -1,4 +1,31 @@
 #!/bin/bash
+# TODO add folder flag and verbose
+
+help="Usage: `basename $0` [OPTS]
+Process bark recordings for peaks
+
+    -h      show this help message and exit
+    -c      continuously process until killed
+"
+
+continuous=false
+
+while getopts :ch opt; do
+    case $opt in
+        h)
+            echo "$help"
+            exit 0
+            ;;
+        \?)
+            echo "$help"
+            exit 1
+            ;;
+        c)
+            continuous=true
+            ;;
+    esac
+done
+
 while [ true ]; do
     if find sounds/*.wav > /dev/null 2>&1; then
         for i in sounds/*.wav; do
@@ -10,5 +37,10 @@ while [ true ]; do
             mv "$i" "$i.done"
         done
     fi
+
+    if [[ $continuous == false ]]; then
+        exit 0;
+    fi
+
     sleep 1;
 done
