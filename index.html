@@ -63,7 +63,7 @@
 		d3.json("bark.txt", function(error, barks) {
 			var data = barks.data;
 		  data.forEach(function(d) {
-		    d.date = parseDate(d.time);
+		    d.date = parseDate(d.time.split('_')[1]);
 		    d.volume = +d.volume;
 		  });
 

@@ -30,8 +30,9 @@ while [ true ]; do
     if find sounds/*.wav > /dev/null 2>&1; then
         for i in sounds/*.wav; do
             amp=$(sox -t .wav "$i" -n stat 2>&1 | grep "Maximum amplitude" | cut -d ':' -f 2 | tr -d ' ')
+            dtime=$(echo "$i" | sed -r "s/[a-z\.\/]//g")
             echo -e "\t\t{" >> bark.txt
-            echo -e "\t\t\t\"time\": \"$i\"," >> bark.txt
+            echo -e "\t\t\t\"time\": \"$dtime\"," >> bark.txt
             echo -e "\t\t\t\"volume\": \"$amp\"" >> bark.txt
             echo -e "\t\t}," >> bark.txt
             mv "$i" "$i.done"
