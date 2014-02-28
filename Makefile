@@ -5,7 +5,7 @@ all:
 	@/bin/echo -e "\t]\n}" >> bark.txt
 
 archive:
-	cd ..; tar -pczf $(shell date +%F)-bark.tar.gz webcam
+	cd ..; tar -pczf $(shell date +%F)-bark.tar.gz dogwatch
 
 clean:
 	rm -rf arch sounds *.jpg
