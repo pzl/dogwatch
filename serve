@@ -1,0 +1,17 @@
+#!/bin/bash
+
+command -v python >/dev/null 2>&1 || { echo >&2 "this web server requires python in your PATH"; exit 1; }
+
+PORT=6886
+if [ -n "$1" ]; then
+    PORT="$1"
+fi
+
+
+PYVER=$(/usr/bin/env python -V | sed -rn 's/Python\s*([0-9])(\.[0-9])+/\1/p')
+if [ $PYVER -eq 3 ]; then
+    /usr/bin/env python -m http.server $PORT
+else
+    /usr/bin/env python -m SimpleHTTPServer $PORT
+fi
+
