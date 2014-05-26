@@ -39,13 +39,13 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(TARGET) $(OBJS) $(LDFLAGS) $(LIBS)
 
 install:
-	mkdir -p "$(DESTDIR)$(BINPREFIX)"
+	test -d "$(DESTDIR)$(BINPREFIX)" || mkdir "$(DESTDIR)$(BINPREFIX)"
+	test -d "$(DESTDIR)$(MANPREFIX)"/man1 || mkdir "$(DESTDIR)$(MANPREFIX)"/man1
+	test -d "$(DESTDIR$(BASHCPL)" || mkdir "$(DESTDIR)$(BASHCPL)"
+	test -d "$(DESTDIR)$(ZSHCPL)" || mkdir "$(DESTDIR)$(ZSHCPL)"
 	cp -p $(TARGET) "$(DESTDIR)$(BINPREFIX)"
-	mkdir -p "$(DESTDIR)$(MANPREFIX)"/man1
 	cp -Pp doc/$(TARGET).1 "$(DESTDIR)$(MANPREFIX)"/man1
-	mkdir -p "$(DESTDIR)$(BASHCPL)"
 	cp -p contrib/bash_completion "$(DESTDIR)$(BASHCPL)"/$(TARGET)
-	mkdir -p "$(DESTDIR)$(ZSHCPL)"
 	cp -p contrib/zsh_completion "$(DESTDIR)$(ZSHCPL)"/_$(TARGET)
 
 uninstall:
