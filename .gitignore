@@ -3,3 +3,6 @@
 *.done
 *.json
 *.txt
+
+out
+dogwatch
