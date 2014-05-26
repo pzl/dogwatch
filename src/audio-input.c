@@ -71,7 +71,7 @@ int get_audio(int card){
     
     int i,
         err,
-        buffer_frames=2048;
+        buffer_frames=65536;
     unsigned int rate = 44100;
     char * buffer;
     char hwname[64];
@@ -124,14 +124,27 @@ int get_audio(int card){
     
     buffer = malloc(buffer_frames * snd_pcm_format_width(format) / 8 * 2);
 
+    
+    
+    int fd = open("record.pcm", O_WRONLY | O_TRUNC);
+    if (!fd){
+        fprintf(stderr, "couldn't open file for writing");
+        return -1;
+    }
 
-    for (i = 0; i< 70; ++i){
+
+
+    for (i = 0; i< 10; ++i){
         if ((err = snd_pcm_readi(capture_handle, buffer, buffer_frames)) != buffer_frames) {
             fprintf(stderr, "read from audio interface failed: %s\n",snd_strerror(err));
             return -1;
         }
+        write(fd,buffer,buffer_frames);
         fprintf(stdout, "read %d done\n",i);
     }
+
+    close(fd);
+
 
     free(buffer);
 
