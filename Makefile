@@ -7,11 +7,13 @@ CFLAGS += -Wstrict-prototypes -Wwrite-strings -Wpadded -ftrapv
 CFLAGS += -fsanitize=address
 CFLAGS += -march=native
 SFLAGS = -std=c99 -pedantic
+SRCDIR = src
+OBJDIR = out
 LDFLAGS += 
 INCLUDES = -I.
 LIBS =
-SRCS = 
-OBJS=$(SRCS:.c=.o)
+SRCS = $(wildcard $(SRCDIR)/*.c)
+OBJS=$(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 TARGET=dogwatch
 
 PREFIX ?= /usr
@@ -29,6 +31,9 @@ debug: CFLAGS += -O0 -g -DDEBUG
 debug: $(TARGET)
 
 $(OBJS): Makefile
+
+dummy := $(shell test -d $(builddir) || mkdir -p $(builddir))
+
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(TARGET) $(OBJS) $(LDFLAGS) $(LIBS)
@@ -53,7 +58,7 @@ uninstall:
 doc:
 	a2x -v -d manpage -f manpage -a revnumber=$(VERSION) doc/$(TARGET).1.txt
 
-.c.o:
+$(OBJS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	$(CC) $(SFLAGS) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
 clean:
