@@ -11,7 +11,7 @@ SRCDIR = src
 OBJDIR = out
 LDFLAGS += 
 INCLUDES = -I.
-LIBS =
+LIBS = -lasound
 SRCS = $(wildcard $(SRCDIR)/*.c)
 OBJS=$(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 TARGET=dogwatch
