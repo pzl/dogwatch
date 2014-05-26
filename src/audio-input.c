@@ -4,8 +4,140 @@
 #include <alsa/asoundlib.h>
 #include "audio-input.h"
 
-int interfaces(int a){
-    return a+2;
+
+int num_interfaces(void){
+    int err,
+        cardNum=-1,
+        cards=0;
+
+    for (;;){
+        if ((err = snd_card_next(&cardNum)) < 0){
+            fprintf(stderr,"Error getting ALSA card number: %s",snd_strerror(err));
+            break;
+        }
+        if (cardNum < 0){
+            break;
+        }
+        cards++;
+    }
+    snd_config_update_free_global();
+    return cards;
+}
+
+
+void get_interfaces(char * interfaces[]){
+    int err,
+        cardNum=-1;
+
+    for (;;){
+        snd_ctl_t *cardHandle;
+
+        if ((err = snd_card_next(&cardNum)) < 0){
+            fprintf(stderr,"Error getting ALSA card number: %s",snd_strerror(err));
+            //continue or break here? how to return
+            break;
+        }
+        if (cardNum < 0){
+            break;
+        }
+
+        char str[64];
+        sprintf(str, "hw:%i", cardNum);
+        if ((err = snd_ctl_open(&cardHandle, str, 0)) < 0){
+            fprintf(stderr, "Can't open card %i: %s\n", cardNum, snd_strerror(err));
+            continue;
+        }
+
+        snd_ctl_card_info_t *cardInfo;
+        snd_ctl_card_info_malloc(&cardInfo);
+        if ((err = snd_ctl_card_info(cardHandle,cardInfo)) < 0){
+            fprintf(stderr, "Can't get info for card %i: %s\n",cardNum, snd_strerror(err));
+            continue;
+        } else {
+            char *p = malloc(sizeof(char) * 40);
+            strcpy(p, snd_ctl_card_info_get_name(cardInfo));
+            interfaces[cardNum] = p;
+        }
+        snd_ctl_close(cardHandle);
+    }
+    snd_config_update_free_global();
+
+}
+
+int get_audio(int card){
+    if (card < 0){
+        return -1;
+    }
+    
+    int i,
+        err,
+        buffer_frames=2048;
+    unsigned int rate = 44100;
+    char * buffer;
+    char hwname[64];
+    snd_pcm_t *capture_handle;
+    snd_pcm_hw_params_t *hw_params;
+    snd_pcm_format_t format = SND_PCM_FORMAT_S16_LE;
+
+    sprintf(hwname,"hw:%i",card);
+
+
+    if ((err = snd_pcm_open(&capture_handle, hwname, SND_PCM_STREAM_CAPTURE, 0)) < 0){
+        fprintf(stderr, "cannot open audio device %s (%s)\n",hwname,snd_strerror(err));
+        return -1;
+    }
+    if ((err = snd_pcm_hw_params_malloc(&hw_params)) < 0){
+        fprintf(stderr,"cannot allocate space for hwparams: %s\n",snd_strerror(err));
+        return -1;
+    }
+    if ((err = snd_pcm_hw_params_any(capture_handle, hw_params)) < 0 ){
+        fprintf(stderr, "cannot initialize hw params structure: %s\n",snd_strerror(err));
+        return -1;
+    }
+    if ((err = snd_pcm_hw_params_set_access(capture_handle, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED)) < 0 ){
+        fprintf(stderr,  "cannot set access type: %s\n",snd_strerror(err));
+        return -1;
+    }
+    if ((err = snd_pcm_hw_params_set_format(capture_handle, hw_params, format)) < 0){
+        fprintf(stderr, "cannot set sample format: %s\n", snd_strerror(err));
+        return -1;
+    }
+    if ((err = snd_pcm_hw_params_set_rate_near(capture_handle, hw_params, &rate, 0)) < 0){
+        fprintf(stderr, "cannot set sample rate: %s\n", snd_strerror(err));
+        return -1;
+    }
+    if ((err = snd_pcm_hw_params_set_channels(capture_handle, hw_params, 1)) < 0 ){
+        fprintf(stderr, "cannot set channel count: %s\n", snd_strerror(err));
+        return -1;
+    }
+    if ((err = snd_pcm_hw_params(capture_handle,hw_params)) < 0 ){
+        fprintf(stderr, "cannot set audio params: %s\n", snd_strerror(err));
+        return -1;
+    }
+    
+    snd_pcm_hw_params_free(hw_params);
+
+    if ((err = snd_pcm_prepare(capture_handle)) < 0 ){
+        fprintf(stderr, "cannot prep audio device: %s\n", snd_strerror(err));
+        return -1;
+    }
+    
+    buffer = malloc(buffer_frames * snd_pcm_format_width(format) / 8 * 2);
+
+
+    for (i = 0; i< 70; ++i){
+        if ((err = snd_pcm_readi(capture_handle, buffer, buffer_frames)) != buffer_frames) {
+            fprintf(stderr, "read from audio interface failed: %s\n",snd_strerror(err));
+            return -1;
+        }
+        fprintf(stdout, "read %d done\n",i);
+    }
+
+    free(buffer);
+
+    snd_pcm_close(capture_handle);
+
+    return card;
 }
 
 void print_cards(void){
@@ -24,7 +156,7 @@ void print_cards(void){
             break;
         }
 
-        char str[64];
+        char str[6];
 
         sprintf(str, "hw:%i", cardNum);
         if ((err = snd_ctl_open(&cardHandle, str, 0)) < 0) {
