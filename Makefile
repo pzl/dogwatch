@@ -32,7 +32,7 @@ debug: $(TARGET)
 
 $(OBJS): Makefile
 
-dummy := $(shell test -d $(builddir) || mkdir -p $(builddir))
+dummy := $(shell test -d $(OBJDIR) || mkdir -p $(OBJDIR))
 
 
 $(TARGET): $(OBJS)
