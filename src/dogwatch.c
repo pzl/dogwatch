@@ -1,6 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include "audio-input.h"
+
+
+static void shutdown(int sig){
+    stop_audio();
+}
+
 
 int main(int argc, char **argv) {
     int err, cards;
@@ -23,5 +30,8 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    signal(SIGINT, shutdown);
+
     return 0;
 }
+

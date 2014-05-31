@@ -161,6 +161,11 @@ int get_audio(int card){
     return card;
 }
 
+int stop_audio(void){
+    printf("closing everything\n");
+    return 0;
+}
+
 void print_cards(void){
     int err,
         cardNum=-1;

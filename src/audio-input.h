@@ -20,6 +20,9 @@ void get_interfaces(char * interfaces[]);
  */
 int get_audio(int card);
 
+//close all the things!
+int stop_audio(void);
+
 //prints audio card debug info to stdout
 void print_cards(void);
 
