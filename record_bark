@@ -1,5 +1,0 @@
-#!/bin/bash
-mkdir sounds
-while [ true ]; do
-    arecord -f cd -t wav  -d 1 sounds/`date +"%F_%T"`.wav
-done
