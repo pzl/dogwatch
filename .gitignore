@@ -1,8 +1,8 @@
 *.jpg
 *.wav
+*.pcm
 *.done
-*.json
-*.txt
+a.out
 
 out
 dogwatch
