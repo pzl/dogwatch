@@ -2,10 +2,9 @@
 #define AUDIO_IN_H
 
 
-typedef struct {
-    int id;
-    char name[40];
-} soundcard;
+#define PERIOD_SIZE 2048
+#define PERIODS 256
+#define DRIVER_PERIODS 3
 
 
 //get the number of ALSA cards available

@@ -5,6 +5,7 @@
 #include "audio-input.h"
 
 
+
 int num_interfaces(void){
     int err,
         cardNum=-1,
@@ -71,9 +72,7 @@ int get_audio(int card){
     
     int i,
         err,
-        channels=1,
-        bits=16,
-        buffer_frames=65536;
+        channels=1;
     unsigned int rate = 44100,
                 periods = 2;
     char * buffer;
@@ -116,20 +115,6 @@ int get_audio(int card){
         return -1;
     }
 
-    if ((err = snd_pcm_hw_params_set_periods_near(capture_handle, hw_params, &periods, 0)) < 0){
-        fprintf(stderr, "cannot set periods to %d: %s\n",periods,snd_strerror(err));
-        return -1;
-    }
-
-    //divided by bytes per channel
-    buf = (periodsize*periods)/(bits/8*channels);
-    /*
-    if ((err = snd_pcm_hw_params_set_buffer_size_near(capture_handle, hw_params, &buf)) < 0){
-        fprintf(stderr, "cannot set buffer size  %s\n",snd_strerror(err));
-        return -1;
-    }*/
-
-
     if ((err = snd_pcm_hw_params(capture_handle,hw_params)) < 0 ){
         fprintf(stderr, "cannot set audio params: %s\n", snd_strerror(err));
         return -1;
@@ -143,8 +128,11 @@ int get_audio(int card){
     }
     
     //buffer = malloc(buffer_frames * snd_pcm_format_width(format) / 8 * 2);
-    buffer = malloc(periodsize*periods/2);
-    
+    buffer = malloc(PERIOD_SIZE * PERIODS * channels);
+    if (buffer == NULL){
+        fprintf(stderr, "Failed to allocate buffer to capture audio\n");
+        return -1;
+    }
     
     int fd = open("record.pcm", O_WRONLY | O_TRUNC);
     if (!fd){
