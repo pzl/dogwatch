@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
 #include <alsa/asoundlib.h>
@@ -134,9 +135,9 @@ int get_audio(int card){
         return -1;
     }
     
-    int fd = open("record.pcm", O_WRONLY | O_TRUNC);
+    int fd = open("out/record.pcm", O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (!fd){
-        fprintf(stderr, "couldn't open file for writing");
+        fprintf(stderr, "couldn't open file for writing\n");
         return -1;
     }
 
