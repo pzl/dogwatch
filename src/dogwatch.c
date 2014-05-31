@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     }
 
 
-    err = get_audio(1);
+    err = get_audio(2);
     if (err < 0){
         printf("failed reading audio\n");
         return 1;

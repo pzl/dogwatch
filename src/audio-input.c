@@ -71,13 +71,18 @@ int get_audio(int card){
     
     int i,
         err,
+        channels=1,
+        bits=16,
         buffer_frames=65536;
-    unsigned int rate = 44100;
+    unsigned int rate = 44100,
+                periods = 2;
     char * buffer;
     char hwname[64];
     snd_pcm_t *capture_handle;
     snd_pcm_hw_params_t *hw_params;
     snd_pcm_format_t format = SND_PCM_FORMAT_S16_LE;
+    snd_pcm_uframes_t periodsize = 8, //period size (bytes)
+                        buf;
 
     sprintf(hwname,"hw:%i",card);
 
@@ -110,6 +115,21 @@ int get_audio(int card){
         fprintf(stderr, "cannot set channel count: %s\n", snd_strerror(err));
         return -1;
     }
+
+    if ((err = snd_pcm_hw_params_set_periods_near(capture_handle, hw_params, &periods, 0)) < 0){
+        fprintf(stderr, "cannot set periods to %d: %s\n",periods,snd_strerror(err));
+        return -1;
+    }
+
+    //divided by bytes per channel
+    buf = (periodsize*periods)/(bits/8*channels);
+    /*
+    if ((err = snd_pcm_hw_params_set_buffer_size_near(capture_handle, hw_params, &buf)) < 0){
+        fprintf(stderr, "cannot set buffer size  %s\n",snd_strerror(err));
+        return -1;
+    }*/
+
+
     if ((err = snd_pcm_hw_params(capture_handle,hw_params)) < 0 ){
         fprintf(stderr, "cannot set audio params: %s\n", snd_strerror(err));
         return -1;
@@ -122,8 +142,8 @@ int get_audio(int card){
         return -1;
     }
     
-    buffer = malloc(buffer_frames * snd_pcm_format_width(format) / 8 * 2);
-
+    //buffer = malloc(buffer_frames * snd_pcm_format_width(format) / 8 * 2);
+    buffer = malloc(periodsize*periods/2);
     
     
     int fd = open("record.pcm", O_WRONLY | O_TRUNC);
@@ -132,15 +152,15 @@ int get_audio(int card){
         return -1;
     }
 
-
+    
 
     for (i = 0; i< 10; ++i){
-        if ((err = snd_pcm_readi(capture_handle, buffer, buffer_frames)) != buffer_frames) {
+        if ((err = snd_pcm_readi(capture_handle, buffer, periodsize*periods/2)) < 0) {
             fprintf(stderr, "read from audio interface failed: %s\n",snd_strerror(err));
             return -1;
         }
-        write(fd,buffer,buffer_frames);
-        fprintf(stdout, "read %d done\n",i);
+        write(fd,buffer,periodsize*periods/2);
+        //fprintf(stdout, "read %d done\n",i);
     }
 
     close(fd);
