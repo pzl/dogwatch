@@ -84,7 +84,7 @@ int get_audio(int card){
     snd_pcm_uframes_t periodsize = 8, //period size (bytes)
                         buf;
 
-    sprintf(hwname,"hw:%i",card);
+    sprintf(hwname,"plughw:%i",card);
 
 
     if ((err = snd_pcm_open(&capture_handle, hwname, SND_PCM_STREAM_CAPTURE, 0)) < 0){
