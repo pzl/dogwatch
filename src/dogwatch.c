@@ -21,16 +21,19 @@ typedef struct sound {
 } sound;
 
 
-static void shutdown(int sig){
-    printf("closing\n");
+static void close(void){
 
-    (void) sig; //unused
-
+    printf("terminating audio connection\n");
     PaError err = Pa_Terminate();
     if (err != paNoError){
         printf("PA terminate Error: %s\n", Pa_GetErrorText(err));
     }
+}
 
+static void shutdown(int sig){
+    printf("shutting down\n");
+    (void) sig; //unused
+    close();
     exit(0);
 }
 
@@ -202,6 +205,7 @@ int main(int argc, char **argv) {
         printf("Wrote to file\n");
     }
 
+    close();
 
     return 0;
 }
