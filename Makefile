@@ -6,12 +6,13 @@ CFLAGS += -Wfloat-equal -Wundef -Wshadow -Wpointer-arith -Wcast-align
 CFLAGS += -Wstrict-prototypes -Wwrite-strings -Wpadded -ftrapv
 CFLAGS += -fsanitize=address
 CFLAGS += -march=native
+CFLAGS += -pthread
 SFLAGS = -std=c99 -pedantic
 SRCDIR = src
 OBJDIR = out
 LDFLAGS += 
 INCLUDES = -I.
-LIBS = -lasound
+LIBS = -lasound -lpthread -lportaudio -lm
 SRCS = $(wildcard $(SRCDIR)/*.c)
 OBJS=$(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 TARGET=dogwatch
