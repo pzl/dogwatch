@@ -4,16 +4,15 @@
 #include "portaudio.h"
 
 
-#define SAMPLE_RATE 44100
+#define SAMPLE_RATE 8000
 #define FRAMES_PER_BUFFER   512
-#define CHANNELS 2
+#define CHANNELS 1
 
-#define PA_SAMPLE_TYPE  paFloat32
-typedef float SAMPLE;
+#define PA_SAMPLE_TYPE  paUInt8
+typedef unsigned char SAMPLE;
+#define SAMPLE_SILENCE 128
 
-
-#define SAMPLE_SILENCE 0.0f
-
+#define SECONDS 5
 
 typedef struct sound {
     int frameIndex;
@@ -107,7 +106,7 @@ int main(int argc, char **argv) {
     double average;
 
 
-    data.maxFrameIndex = totalFrames = 5 * SAMPLE_RATE; //seconds
+    data.maxFrameIndex = totalFrames = SECONDS * SAMPLE_RATE; //seconds
     data.frameIndex = 0;
     numSamples = totalFrames * CHANNELS;
     numBytes = numSamples * sizeof(SAMPLE);
@@ -129,34 +128,20 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    /* Device enumeration */
-    int nDevices;
-    nDevices  = Pa_GetDeviceCount();
-    printf("PA found %d devices\n", nDevices);
-    const PaDeviceInfo *dInfo;
-    for (i=0; i<nDevices; i++){
-        dInfo = Pa_GetDeviceInfo(i);
-        if (dInfo->maxInputChannels > 0){
-            printf("device %d: %s\n", i, dInfo->name);
-        }
-    }
-    printf("using default\n");
 
-
-
-
+    /* set recording parameters */
+    inputConfig.channelCount = CHANNELS;
+    inputConfig.sampleFormat = PA_SAMPLE_TYPE;
+    inputConfig.hostApiSpecificStreamInfo=NULL;
     inputConfig.device = Pa_GetDefaultInputDevice();
     if (inputConfig.device == paNoDevice){
         fprintf(stderr, "Error: No default input device\n");
         return -1;
     }
-    inputConfig.channelCount = CHANNELS;
-    inputConfig.sampleFormat = PA_SAMPLE_TYPE;
     inputConfig.suggestedLatency = Pa_GetDeviceInfo(inputConfig.device)->defaultLowInputLatency;
-    inputConfig.hostApiSpecificStreamInfo=NULL;
 
 
-
+    /* start recording */
     err = Pa_OpenStream(&stream,
                        &inputConfig,
                        NULL, //output config
@@ -169,13 +154,13 @@ int main(int argc, char **argv) {
         printf("PA open default Error: %s\n", Pa_GetErrorText(err));
         return -1;
     }
-
     err = Pa_StartStream(stream);
     if (err != paNoError){
         fprintf(stderr, "Error: could not start stream: %s\n", Pa_GetErrorText(err));
         return -1;
     }
     printf("Recording started\n");
+
 
 
     while ((err = Pa_IsStreamActive(stream)) == 1){
@@ -202,7 +187,7 @@ int main(int argc, char **argv) {
     }
     average = average / (double)numSamples;
 
-    printf("sample max amplitude: %.8f\n", max);
+    printf("sample max amplitude: %d\n", max);
     printf("sample average = %1f\n", average);
 
 
