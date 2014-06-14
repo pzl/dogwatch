@@ -2,23 +2,8 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <portaudio.h>
+#include "audioin.h"
 
-
-#define SAMPLE_RATE 8000
-#define FRAMES_PER_BUFFER   512
-#define CHANNELS 1
-
-#define PA_SAMPLE_TYPE  paUInt8
-typedef unsigned char SAMPLE;
-#define SAMPLE_SILENCE 128
-
-#define SECONDS 5
-
-typedef struct sound {
-    int frameIndex;
-    int maxFrameIndex;
-    SAMPLE *recorded;
-} sound;
 
 
 static void close(void){
@@ -37,58 +22,16 @@ static void shutdown(int sig){
     exit(0);
 }
 
-static int get_audio(const void *inputBuffer, void *outputBuffer,
-                         unsigned long framesPerBuffer,
-                         const PaStreamCallbackTimeInfo* timeInfo,
-                         PaStreamCallbackFlags statusFlags,
-                         void *udata){
-
-    sound *data = (sound*)udata;
-    const SAMPLE *rptr = (const SAMPLE*)inputBuffer;
-    SAMPLE *wptr = &data->recorded[data->frameIndex * CHANNELS];
-    long framesToCalc;
-    long i;
-    int finished;
-    unsigned long framesLeft = data->maxFrameIndex - data->frameIndex;
-
-    /* avoid unused var warnings */
-    (void) outputBuffer;
-    (void) timeInfo;
-    (void) statusFlags;
-    (void) udata;
-
-    if (framesLeft < framesPerBuffer) {
-        framesToCalc = framesLeft;
-        finished = paComplete;
-    } else {
-        framesToCalc = framesPerBuffer;
-        finished = paContinue;
-    }
-
-
-    if (inputBuffer == NULL){
-        for (i=0; i<framesToCalc; i++){
-            *wptr++ = SAMPLE_SILENCE; //left?
-            if (CHANNELS == 2 ){
-                *wptr++ = SAMPLE_SILENCE; //right?
-            }
-        }
-    } else {
-        for (i=0; i<framesToCalc; i++){
-            *wptr++ = *rptr++; //left
-            if (CHANNELS == 2){
-                *wptr++ = *rptr++; //right
-            }
-        }
-    }
-
-    data->frameIndex += framesToCalc;
-    return finished;
-
-}
 
 
 int main(int argc, char **argv) {
+    PaStream *stream;
+    PaError err=paNoError;
+    sound data;
+
+    SAMPLE max, val;
+    double average;
+    int numSamples, i;
 
     //wunused
     (void) argc;
@@ -97,73 +40,10 @@ int main(int argc, char **argv) {
 
     signal(SIGINT, shutdown);
 
-    PaStreamParameters inputConfig;
-    PaStream *stream;
-    PaError err=paNoError;
-    sound data;
-    int i,
-        totalFrames,
-        numSamples,
-        numBytes;
-    SAMPLE max, val;
-    double average;
+    audio_init(&stream, &data);
+    audio_start(stream);
 
-
-    data.maxFrameIndex = totalFrames = SECONDS * SAMPLE_RATE; //seconds
-    data.frameIndex = 0;
-    numSamples = totalFrames * CHANNELS;
-    numBytes = numSamples * sizeof(SAMPLE);
-    data.recorded = (SAMPLE *) malloc(numBytes);
-
-    if (data.recorded == NULL){
-        printf("Could not allocate audio buffer\n");
-        return -1;
-    }
-
-    for (i=0; i<numSamples; i++){
-        data.recorded[i] = 0;
-    }
-
-    /* PortAudio init */
-    err = Pa_Initialize();
-    if (err != paNoError){
-        printf("PA Init Error: %s\n", Pa_GetErrorText(err));
-        return -1;
-    }
-
-
-    /* set recording parameters */
-    inputConfig.channelCount = CHANNELS;
-    inputConfig.sampleFormat = PA_SAMPLE_TYPE;
-    inputConfig.hostApiSpecificStreamInfo=NULL;
-    inputConfig.device = Pa_GetDefaultInputDevice();
-    if (inputConfig.device == paNoDevice){
-        fprintf(stderr, "Error: No default input device\n");
-        return -1;
-    }
-    inputConfig.suggestedLatency = Pa_GetDeviceInfo(inputConfig.device)->defaultLowInputLatency;
-
-
-    /* start recording */
-    err = Pa_OpenStream(&stream,
-                       &inputConfig,
-                       NULL, //output config
-                       SAMPLE_RATE,
-                       FRAMES_PER_BUFFER,
-                       paClipOff,
-                       get_audio,
-                       &data); //pointer to be passed to callback
-    if (err != paNoError){
-        printf("PA open default Error: %s\n", Pa_GetErrorText(err));
-        return -1;
-    }
-    err = Pa_StartStream(stream);
-    if (err != paNoError){
-        fprintf(stderr, "Error: could not start stream: %s\n", Pa_GetErrorText(err));
-        return -1;
-    }
-    printf("Recording started\n");
-
+    numSamples = data.maxFrameIndex * CHANNELS;
 
 
     while ((err = Pa_IsStreamActive(stream)) == 1){
@@ -176,6 +56,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    
     max = 0;
     average = 0.0;
     for (i=0; i<numSamples; i++){
@@ -200,11 +81,10 @@ int main(int argc, char **argv) {
     if (f == NULL){
         fprintf(stderr, "Could not open file for writing\n");
     } else {
-        fwrite(data.recorded, CHANNELS*sizeof(SAMPLE), totalFrames, f);
+        fwrite(data.recorded, CHANNELS*sizeof(SAMPLE), data.maxFrameIndex, f);
         fclose(f);
         printf("Wrote to file\n");
     }
-
     close();
 
     return 0;
