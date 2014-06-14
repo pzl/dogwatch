@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
-#include "portaudio.h"
+#include <portaudio.h>
 
 
 #define SAMPLE_RATE 8000
