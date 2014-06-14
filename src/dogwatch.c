@@ -23,44 +23,25 @@ static void shutdown(int sig){
 }
 
 
-
-int main(int argc, char **argv) {
-    PaStream *stream;
-    PaError err=paNoError;
-    sound data;
-
+static void process_audio(PaStream *stream, sound *data){
+    PaError err = paNoError;
     SAMPLE max, val;
     double average;
     int numSamples, i;
 
-    //wunused
-    (void) argc;
-    (void) argv;
-
-
-    signal(SIGINT, shutdown);
-
-    audio_init(&stream, &data);
-    audio_start(stream);
-
-    numSamples = data.maxFrameIndex * CHANNELS;
-
-
+    numSamples = data->maxFrameIndex * CHANNELS;
     while ((err = Pa_IsStreamActive(stream)) == 1){
         Pa_Sleep(1000);
-        printf("index = %d\n", data.frameIndex);
-        fflush(stdout);
     }
     if (err < 0){
         printf("Error recording: %s\n", Pa_GetErrorText(err));
-        return -1;
+        exit(1);
     }
-
     
     max = 0;
     average = 0.0;
     for (i=0; i<numSamples; i++){
-        val = data.recorded[i];
+        val = data->recorded[i];
         if (val < 0){
             val = -val;
         }
@@ -74,17 +55,36 @@ int main(int argc, char **argv) {
     printf("sample max amplitude: %d\n", max);
     printf("sample average = %1f\n", average);
 
+}
 
-
+static void save_audio(sound *data){
     FILE *f;
     f = fopen("out/record.raw","wb");
     if (f == NULL){
         fprintf(stderr, "Could not open file for writing\n");
     } else {
-        fwrite(data.recorded, CHANNELS*sizeof(SAMPLE), data.maxFrameIndex, f);
+        fwrite(data->recorded, CHANNELS*sizeof(SAMPLE), data->maxFrameIndex, f);
         fclose(f);
         printf("Wrote to file\n");
     }
+}
+
+int main(int argc, char **argv) {
+    PaStream *stream;
+    sound data;
+
+    //wunused
+    (void) argc;
+    (void) argv;
+
+
+    signal(SIGINT, shutdown);
+
+    audio_init(&stream, &data);
+    audio_start(stream);
+    process_audio(stream, &data);
+    save_audio(&data);
+
     close();
 
     return 0;
