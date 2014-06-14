@@ -30,7 +30,6 @@ static void shutdown(int sig){
     PaError err = Pa_Terminate();
     if (err != paNoError){
         printf("PA terminate Error: %s\n", Pa_GetErrorText(err));
-        exit(1);
     }
 
     exit(0);
@@ -94,6 +93,7 @@ int main(int argc, char **argv) {
     (void) argv;
 
 
+    signal(SIGINT, shutdown);
 
     PaStreamParameters inputConfig;
     PaStream *stream;
@@ -202,11 +202,21 @@ int main(int argc, char **argv) {
     }
     average = average / (double)numSamples;
 
-    printf("sample max amplitude: %f\n", max);
+    printf("sample max amplitude: %.8f\n", max);
     printf("sample average = %1f\n", average);
 
 
-    signal(SIGINT, shutdown);
+
+    FILE *f;
+    f = fopen("out/record.raw","wb");
+    if (f == NULL){
+        fprintf(stderr, "Could not open file for writing\n");
+    } else {
+        fwrite(data.recorded, CHANNELS*sizeof(SAMPLE), totalFrames, f);
+        fclose(f);
+        printf("Wrote to file\n");
+    }
+
 
     return 0;
 }
