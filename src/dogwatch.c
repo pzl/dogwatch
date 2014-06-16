@@ -85,7 +85,10 @@ int main(int argc, char **argv) {
     audio_start(stream);
     process_audio(stream, &data);
     save_audio(&data);
+
+    nc_setup();
     nc_view("out/record.raw");
+    nc_stop();
 
     close();
 

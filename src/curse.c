@@ -6,6 +6,33 @@
 
 static wave_pos map(unsigned char);
 
+void nc_setup(void){
+
+	/* ncurses setup */
+	initscr();
+	noecho();
+	curs_set(FALSE);
+
+	if (has_colors()){
+		use_default_colors();
+		start_color();
+		init_pair(1,COLOR_RED,-1);
+		init_pair(2,COLOR_BLUE,COLOR_BLUE);
+	}
+
+	/* draw baseline */
+	if (has_colors()){
+		attron(COLOR_PAIR(1));
+	}
+	mvhline(LINES/2,0,'-',COLS);
+	refresh();
+}
+
+void nc_stop(void){
+	endwin();
+}
+
+
 void nc_view(const char *fn){
 
 	unsigned int i, j;
@@ -14,8 +41,6 @@ void nc_view(const char *fn){
 			fsize = 0;
 	struct timespec wait;
 	wait.tv_sec=0;
-
-	initscr();
 
 
 	unsigned char buffer[COLS];
@@ -27,25 +52,6 @@ void nc_view(const char *fn){
 	fsize = ftell(fp);
 	fseek(fp,0L,SEEK_SET);
 
-
-
-	initscr();
-	noecho();
-	curs_set(FALSE);
-
-	if (has_colors()){
-		use_default_colors();
-		start_color();
-		init_pair(1,COLOR_RED,-1);
-		attron(COLOR_PAIR(1));
-	}
-
-	mvhline(LINES/2,0,'-',COLS);
-
-	if (has_colors()){
-		init_pair(2,COLOR_BLUE,COLOR_BLUE);
-		attron(COLOR_PAIR(2));
-	}
 
 
 	for (i=0; i<(fsize/COLS); i++){
@@ -72,10 +78,6 @@ void nc_view(const char *fn){
 		nanosleep(&wait,NULL);
 	}
 	refresh();
-
-	endwin();
-
-
 
 }
 
