@@ -1,38 +1,29 @@
 #include <ncurses.h>
 #include <unistd.h>
 #include <stdio.h>
+#include "curse.h"
 
 #define BUFFER_SIZE 256
 
-typedef struct pos {
-	int y;
-	int height; 
-} pos;
+static wave_pos map(unsigned char);
 
-pos map(unsigned char);
+void nc_view(const char *fn){
 
-int main (int argc, char **argv){
-
-	int x=0,
-		y=0,
-		nextx=0,
-		dir=1,
-		i, j;
-	pos ln;
-	unsigned int sz;
+	unsigned int i, j;
+	wave_pos ln;
+	size_t bytes_read = 0,
+			fsize = 0;
 
 	unsigned char buffer[BUFFER_SIZE];
 	unsigned char *bp;
 	FILE *fp;
 
-	fp = fopen("out/record.raw","rb");
+	fp = fopen(fn,"rb");
 	fseek(fp,0L,SEEK_END);
-	sz = ftell(fp);
+	fsize = ftell(fp);
 	fseek(fp,0L,SEEK_SET);
 
-	size_t bytes_read = 0;
-	//bytes_read = fread(buffer, sizeof(unsigned char), BUFFER_SIZE, fp);
-	//bp = buffer;
+
 
 	initscr();
 	noecho();
@@ -53,7 +44,7 @@ int main (int argc, char **argv){
 	}
 
 
-	for (i=0; i<(sz/BUFFER_SIZE); i++){
+	for (i=0; i<(fsize/BUFFER_SIZE); i++){
 		clear();
 		if (has_colors()){
 			attron(COLOR_PAIR(1));
@@ -68,12 +59,11 @@ int main (int argc, char **argv){
 		bytes_read = fread(buffer, sizeof(unsigned char), BUFFER_SIZE, fp);
 		bp = buffer;
 
-		for (j=0; j<BUFFER_SIZE; j++){		
+		for (j=0; j<bytes_read; j++){		
 			ln = map(*bp++);
 			mvvline(ln.y,j,'|',ln.height);
 		}
 		refresh();
-		//sleep(1);
 		usleep(80000);
 	}
 	refresh();
@@ -84,8 +74,8 @@ int main (int argc, char **argv){
 
 }
 
-pos map(unsigned char c){
-	pos p;
+static wave_pos map(unsigned char c){
+	wave_pos p;
 	int peak;
 
 	peak = (c * LINES)/255;

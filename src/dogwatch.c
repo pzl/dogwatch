@@ -3,6 +3,7 @@
 #include <signal.h>
 #include <portaudio.h>
 #include "audioin.h"
+#include "curse.h"
 
 
 
@@ -84,6 +85,7 @@ int main(int argc, char **argv) {
     audio_start(stream);
     process_audio(stream, &data);
     save_audio(&data);
+    nc_view("out/record.raw");
 
     close();
 

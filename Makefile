@@ -12,7 +12,7 @@ SRCDIR = src
 OBJDIR = out
 LDFLAGS += 
 INCLUDES = -I.
-LIBS = -lasound -lpthread -lportaudio -lm
+LIBS = -lasound -lpthread -lportaudio -lm -lncurses
 SRCS = $(wildcard $(SRCDIR)/*.c)
 OBJS=$(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 TARGET=dogwatch
