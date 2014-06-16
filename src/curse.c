@@ -1,9 +1,8 @@
-#include <ncurses.h>
-#include <unistd.h>
 #include <stdio.h>
+#include <ncurses.h>
+#include <time.h>
 #include "curse.h"
 
-#define BUFFER_SIZE 256
 
 static wave_pos map(unsigned char);
 
@@ -13,8 +12,13 @@ void nc_view(const char *fn){
 	wave_pos ln;
 	size_t bytes_read = 0,
 			fsize = 0;
+	struct timespec wait;
+	wait.tv_sec=0;
 
-	unsigned char buffer[BUFFER_SIZE];
+	initscr();
+
+
+	unsigned char buffer[COLS];
 	unsigned char *bp;
 	FILE *fp;
 
@@ -44,7 +48,7 @@ void nc_view(const char *fn){
 	}
 
 
-	for (i=0; i<(fsize/BUFFER_SIZE); i++){
+	for (i=0; i<(fsize/COLS); i++){
 		clear();
 		if (has_colors()){
 			attron(COLOR_PAIR(1));
@@ -55,8 +59,8 @@ void nc_view(const char *fn){
 			attron(COLOR_PAIR(2));
 		}
 
-		fseek(fp,BUFFER_SIZE*i,SEEK_SET);
-		bytes_read = fread(buffer, sizeof(unsigned char), BUFFER_SIZE, fp);
+		fseek(fp,COLS*i,SEEK_SET);
+		bytes_read = fread(buffer, sizeof(unsigned char), COLS, fp);
 		bp = buffer;
 
 		for (j=0; j<bytes_read; j++){		
@@ -64,7 +68,8 @@ void nc_view(const char *fn){
 			mvvline(ln.y,j,'|',ln.height);
 		}
 		refresh();
-		usleep(80000);
+		wait.tv_nsec = 16750000; //8000Hz to ns times page len (COL)
+		nanosleep(&wait,NULL);
 	}
 	refresh();
 
