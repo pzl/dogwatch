@@ -3,6 +3,7 @@
 #include <time.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include "audioin.h"
 #include "curse.h"
 
 
@@ -35,28 +36,25 @@ void nc_stop(void){
 }
 
 
-void nc_view(const char *fn){
-
-	unsigned int i, j;
+void *nc_view(void *snd){
+	sound *data = (sound *)snd;
+	SAMPLE *packet;
+	int i;
 	wave_pos ln;
-	size_t bytes_read = 0,
-			fsize = 0;
+
+	unsigned int j;
+	size_t bytes_read = 0;
 	struct timespec wait;
 	wait.tv_sec=0;
 
 
 	unsigned char buffer[COLS];
 	unsigned char *bp;
-	FILE *fp;
-
-	fp = fopen(fn,"rb");
-	fseek(fp,0L,SEEK_END);
-	fsize = ftell(fp);
-	fseek(fp,0L,SEEK_SET);
 
 
+	while (1){
+		sem_wait(&(data->drawer));
 
-	for (i=0; i<(fsize/COLS); i++){
 		clear();
 		if (has_colors()){
 			attron(COLOR_PAIR(1));
@@ -67,20 +65,14 @@ void nc_view(const char *fn){
 			attron(COLOR_PAIR(2));
 		}
 
-		fseek(fp,COLS*i,SEEK_SET);
-		bytes_read = fread(buffer, sizeof(unsigned char), COLS, fp);
-		bp = buffer;
-
-		for (j=0; j<bytes_read; j++){		
-			ln = map(*bp++);
-			mvvline(ln.y,j,'|',ln.height);
+		packet = &(data->recorded[data->frameIndex * CHANNELS]);
+		packet -= FRAMES_PER_BUFFER;
+		for (i=0; i<COLS; i++){
+			ln = map(*packet++);
+			mvvline(ln.y,i,'|',ln.height);
 		}
 		refresh();
-		wait.tv_nsec = 16750000; //8000Hz to ns times page len (COL)
-		nanosleep(&wait,NULL);
 	}
-	refresh();
-
 }
 
 static wave_pos map(unsigned char c){

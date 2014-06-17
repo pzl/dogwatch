@@ -7,7 +7,7 @@ typedef struct wave_pos {
 } wave_pos;
 
 void nc_setup(void);
-void nc_view(const char *);
+void *nc_view(void *);
 void nc_stop(void);
 
 #endif

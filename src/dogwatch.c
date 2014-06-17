@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
     PaStream *stream;
     sound data;
     writer wargs;
-    pthread_t file_writer;
+    pthread_t file_writer, wave_viewer;
 
     //wunused
     (void) argc;
@@ -97,13 +97,21 @@ int main(int argc, char **argv) {
         close_file(wargs.fp);
         exit(1);
     }
-    process_audio(stream, &data);
     //save_audio(&data);
 
-    //nc_setup();
-    //nc_view("out/record.raw");
-    //nc_stop();
+    nc_setup();
+    if (pthread_create(&wave_viewer, NULL, nc_view, &data)){
+        fprintf(stderr, "Error creating waveform viewer\n");
+        nc_stop();
+        close();
+        close_file(wargs.fp);
+        exit(1);
+    }
 
+    process_audio(stream, &data);
+
+
+    nc_stop();
     close();
     close_file(wargs.fp);
 
