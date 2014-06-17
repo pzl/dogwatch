@@ -5,6 +5,7 @@
 #include <semaphore.h>
 #include <portaudio.h>
 #include "audioin.h"
+#include "writer.h"
 #include "curse.h"
 
 
@@ -75,6 +76,8 @@ static void save_audio(sound *data){
 int main(int argc, char **argv) {
     PaStream *stream;
     sound data;
+    writer wargs;
+    pthread_t file_writer;
 
     //wunused
     (void) argc;
@@ -83,16 +86,26 @@ int main(int argc, char **argv) {
 
     signal(SIGINT, shutdown);
 
+    wargs.fp = init_file("out/record.raw");
+    wargs.data = &data;
+
     audio_init(&stream, &data);
     audio_start(stream);
+    if (pthread_create(&file_writer, NULL, write_file, &wargs)){
+        fprintf(stderr, "Error creating file writer\n");
+        close();
+        close_file(wargs.fp);
+        exit(1);
+    }
     process_audio(stream, &data);
-    save_audio(&data);
+    //save_audio(&data);
 
-    nc_setup();
-    nc_view("out/record.raw");
-    nc_stop();
+    //nc_setup();
+    //nc_view("out/record.raw");
+    //nc_stop();
 
     close();
+    close_file(wargs.fp);
 
     return 0;
 }
