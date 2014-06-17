@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <portaudio.h>
+#include <pthread.h>
+#include <semaphore.h>
 #include "audioin.h"
 
 static int get_audio(const void *inputBuffer, void *outputBuffer,
@@ -49,6 +51,10 @@ static int get_audio(const void *inputBuffer, void *outputBuffer,
     }
 
     data->frameIndex += framesToCalc;
+
+    sem_post(&(data->writer));
+    sem_post(&(data->drawer));
+
     return finished;
 
 }
@@ -69,6 +75,9 @@ void audio_init(PaStream **pstream, sound *data){
     numSamples = totalFrames * CHANNELS;
     numBytes = numSamples * sizeof(SAMPLE);
     data->recorded = (SAMPLE *) malloc(numBytes);
+
+    sem_init(&(data->drawer),0,0);
+    sem_init(&(data->writer),0,0);
 
     if (data->recorded == NULL){
         printf("Could not allocate audio buffer\n");

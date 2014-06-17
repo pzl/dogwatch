@@ -14,6 +14,8 @@ typedef unsigned char SAMPLE;
 typedef struct sound {
     int frameIndex;
     int maxFrameIndex;
+    sem_t drawer;
+    sem_t writer;
     SAMPLE *recorded;
 } sound;
 
