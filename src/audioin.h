@@ -3,13 +3,12 @@
 
 #define SAMPLE_RATE 8000
 #define FRAMES_PER_BUFFER   512
+#define PACKETS_PER_BUFFER 4
 #define CHANNELS 1
 
 #define PA_SAMPLE_TYPE  paUInt8
 typedef unsigned char SAMPLE;
 #define SAMPLE_SILENCE 128
-
-#define SECONDS 50
 
 #include <semaphore.h>
 #include <portaudio.h>

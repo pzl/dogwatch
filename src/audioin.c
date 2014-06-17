@@ -13,11 +13,9 @@ static int get_audio(const void *inputBuffer, void *outputBuffer,
 
     sound *data = (sound*)udata;
     const SAMPLE *rptr = (const SAMPLE*)inputBuffer;
-    SAMPLE *wptr = &data->recorded[data->frameIndex * CHANNELS];
-    long framesToCalc;
+    SAMPLE *wptr;
+    int fpb = (int) framesPerBuffer;
     long i;
-    int finished;
-    unsigned long framesLeft = data->maxFrameIndex - data->frameIndex;
 
     /* avoid unused var warnings */
     (void) outputBuffer;
@@ -25,24 +23,24 @@ static int get_audio(const void *inputBuffer, void *outputBuffer,
     (void) statusFlags;
     (void) udata;
 
-    if (framesLeft < framesPerBuffer) {
-        framesToCalc = framesLeft;
-        finished = paComplete;
-    } else {
-        framesToCalc = framesPerBuffer;
-        finished = paContinue;
+
+    /* circle back if we'd fill past the end */
+    if ((data->frameIndex + fpb) > data->maxFrameIndex){
+        data->frameIndex=0;
     }
 
+    wptr = &(data->recorded[data->frameIndex]);
 
+    /* populate the data */
     if (inputBuffer == NULL){
-        for (i=0; i<framesToCalc; i++){
+        for (i=0; i<fpb; i++){
             *wptr++ = SAMPLE_SILENCE; //left?
             if (CHANNELS == 2 ){
                 *wptr++ = SAMPLE_SILENCE; //right?
             }
         }
     } else {
-        for (i=0; i<framesToCalc; i++){
+        for (i=0; i<fpb; i++){
             *wptr++ = *rptr++; //left
             if (CHANNELS == 2){
                 *wptr++ = *rptr++; //right
@@ -51,18 +49,13 @@ static int get_audio(const void *inputBuffer, void *outputBuffer,
     }
 
     data->pstart = data->frameIndex;
-    data->frameIndex += framesToCalc;
-    data->plen = framesToCalc;
-
-    if (data->pstart == data->frameIndex){
-        fprintf(stderr, "pointer problem\n");
-        exit(1);
-    }
+    data->frameIndex += fpb;
+    data->plen = fpb;
 
     sem_post(&(data->writer));
     sem_post(&(data->drawer));
 
-    return finished;
+    return paContinue;
 
 }
 
@@ -77,7 +70,7 @@ void audio_init(PaStream **pstream, sound *data){
 
 
 
-    data->maxFrameIndex = totalFrames = SECONDS * SAMPLE_RATE; //seconds
+    data->maxFrameIndex = totalFrames = FRAMES_PER_BUFFER * PACKETS_PER_BUFFER;
     data->frameIndex = 0;
     data->pstart = 0;
     data->plen = 0;
