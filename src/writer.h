@@ -1,7 +1,6 @@
 #ifndef WRITER_H
 #define WRITER_H
 
-#include <portaudio.h>
 #include "audioin.h"
 
 typedef struct writer {

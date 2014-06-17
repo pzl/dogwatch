@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
-#include <portaudio.h>
 #include "audioin.h"
 #include "writer.h"
 

@@ -11,6 +11,9 @@ typedef unsigned char SAMPLE;
 
 #define SECONDS 5
 
+#include <semaphore.h>
+#include <portaudio.h>
+
 typedef struct sound {
     int frameIndex;
     int maxFrameIndex;
