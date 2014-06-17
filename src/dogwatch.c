@@ -7,6 +7,7 @@
 #include "audioin.h"
 #include "writer.h"
 #include "curse.h"
+#include "gui.h"
 
 
 
@@ -74,6 +75,8 @@ int main(int argc, char **argv) {
         close_file(wargs.fp);
         exit(1);
     }
+
+    gui_init();
 
     audio_wait(stream);
 

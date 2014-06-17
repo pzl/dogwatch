@@ -7,12 +7,13 @@ CFLAGS += -Wstrict-prototypes -Wwrite-strings -Wpadded -ftrapv
 CFLAGS += -fsanitize=address
 CFLAGS += -march=native
 CFLAGS += -pthread
+CFLAGS += $(shell pkg-config --cflags portaudio-2.0 gtk+-3.0 ncurses)
 SFLAGS = -std=c99 -pedantic
 SRCDIR = src
 OBJDIR = out
 LDFLAGS += 
 INCLUDES = -I.
-LIBS = -lasound -lpthread -lportaudio -lm -lncurses
+LIBS = -lpthread $(shell pkg-config --libs portaudio-2.0 gtk+-3.0 ncurses)
 SRCS = $(wildcard $(SRCDIR)/*.c)
 OBJS=$(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 TARGET=dogwatch
