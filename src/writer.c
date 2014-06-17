@@ -17,10 +17,16 @@ FILE *init_file(const char *name){
 
 void *write_file(void *wargs){
 	writer *args = (writer *)wargs;
+	SAMPLE *packet;
+
+
+
 
 	while (1){
 		sem_wait(&(args->data->writer));
-		fwrite(args->data->recorded, CHANNELS*sizeof(SAMPLE), FRAMES_PER_BUFFER, args->fp);
+		packet = &(args->data->recorded[args->data->frameIndex * CHANNELS]);
+		packet -= FRAMES_PER_BUFFER;
+		fwrite(packet, CHANNELS*sizeof(SAMPLE), FRAMES_PER_BUFFER, args->fp);
 	}
 }
 
