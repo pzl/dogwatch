@@ -31,7 +31,7 @@ static void audio_wait(PaStream *stream){
     PaError err = paNoError;
 
     while ((err = Pa_IsStreamActive(stream)) == 1){
-        Pa_Sleep(1000);
+        Pa_Sleep(300);
     }
     if (err < 0){
         printf("Error recording: %s\n", Pa_GetErrorText(err));
