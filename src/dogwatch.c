@@ -61,18 +61,6 @@ static void process_audio(PaStream *stream, sound *data){
 
 }
 
-static void save_audio(sound *data){
-    FILE *f;
-    f = fopen("out/record.raw","wb");
-    if (f == NULL){
-        fprintf(stderr, "Could not open file for writing\n");
-    } else {
-        fwrite(data->recorded, CHANNELS*sizeof(SAMPLE), data->maxFrameIndex, f);
-        fclose(f);
-        printf("Wrote to file\n");
-    }
-}
-
 int main(int argc, char **argv) {
     PaStream *stream;
     sound data;
@@ -97,7 +85,6 @@ int main(int argc, char **argv) {
         close_file(wargs.fp);
         exit(1);
     }
-    //save_audio(&data);
 
     nc_setup();
     if (pthread_create(&wave_viewer, NULL, nc_view, &data)){
