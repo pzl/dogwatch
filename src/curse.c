@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <ncurses.h>
-#include <time.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include "audioin.h"
@@ -41,16 +40,6 @@ void *nc_view(void *snd){
 	SAMPLE *packet;
 	int i;
 	wave_pos ln;
-
-	unsigned int j;
-	size_t bytes_read = 0;
-	struct timespec wait;
-	wait.tv_sec=0;
-
-
-	unsigned char buffer[COLS];
-	unsigned char *bp;
-
 
 	while (1){
 		sem_wait(&(data->drawer));

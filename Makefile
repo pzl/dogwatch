@@ -7,7 +7,7 @@ CFLAGS += -Wstrict-prototypes -Wwrite-strings -Wpadded -ftrapv
 CFLAGS += -fsanitize=address
 CFLAGS += -march=native
 CFLAGS += -pthread
-#SFLAGS = -std=c99 -pedantic
+SFLAGS = -std=c99 -pedantic
 SRCDIR = src
 OBJDIR = out
 LDFLAGS += 
