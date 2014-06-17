@@ -54,9 +54,8 @@ void *nc_view(void *snd){
 			attron(COLOR_PAIR(2));
 		}
 
-		packet = &(data->recorded[data->frameIndex * CHANNELS]);
-		packet -= FRAMES_PER_BUFFER;
-		for (i=0; i<COLS; i++){
+		packet = &(data->recorded[data->pstart]);
+		for (i=0; i<COLS && i<data->plen; i++){
 			ln = map(*packet++);
 			mvvline(ln.y,i,'|',ln.height);
 		}

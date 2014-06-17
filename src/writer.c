@@ -24,9 +24,8 @@ void *write_file(void *wargs){
 
 	while (1){
 		sem_wait(&(args->data->writer));
-		packet = &(args->data->recorded[args->data->frameIndex * CHANNELS]);
-		packet -= FRAMES_PER_BUFFER;
-		fwrite(packet, CHANNELS*sizeof(SAMPLE), FRAMES_PER_BUFFER, args->fp);
+		packet = &(args->data->recorded[args->data->pstart]);
+		fwrite(packet, CHANNELS*sizeof(SAMPLE), args->data->plen, args->fp);
 	}
 }
 

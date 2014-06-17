@@ -9,7 +9,7 @@
 typedef unsigned char SAMPLE;
 #define SAMPLE_SILENCE 128
 
-#define SECONDS 5
+#define SECONDS 50
 
 #include <semaphore.h>
 #include <portaudio.h>
@@ -17,6 +17,8 @@ typedef unsigned char SAMPLE;
 typedef struct sound {
     int frameIndex;
     int maxFrameIndex;
+    int pstart;
+    int plen;
     sem_t drawer;
     sem_t writer;
     SAMPLE *recorded;

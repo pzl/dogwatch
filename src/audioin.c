@@ -50,7 +50,14 @@ static int get_audio(const void *inputBuffer, void *outputBuffer,
         }
     }
 
+    data->pstart = data->frameIndex;
     data->frameIndex += framesToCalc;
+    data->plen = framesToCalc;
+
+    if (data->pstart == data->frameIndex){
+        fprintf(stderr, "pointer problem\n");
+        exit(1);
+    }
 
     sem_post(&(data->writer));
     sem_post(&(data->drawer));
@@ -72,6 +79,8 @@ void audio_init(PaStream **pstream, sound *data){
 
     data->maxFrameIndex = totalFrames = SECONDS * SAMPLE_RATE; //seconds
     data->frameIndex = 0;
+    data->pstart = 0;
+    data->plen = 0;
     numSamples = totalFrames * CHANNELS;
     numBytes = numSamples * sizeof(SAMPLE);
     data->recorded = (SAMPLE *) malloc(numBytes);
