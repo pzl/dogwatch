@@ -17,6 +17,8 @@ static void close(void){
     if (err != paNoError){
         printf("PA terminate Error: %s\n", Pa_GetErrorText(err));
     }
+
+    nc_stop();
 }
 
 static void shutdown(int sig){
@@ -52,24 +54,24 @@ int main(int argc, char **argv) {
 
     signal(SIGINT, shutdown);
 
-    wargs.fp = init_file("out/record.raw");
-    wargs.data = &data;
+    //wargs.fp = init_file("out/record.raw");
+    //wargs.data = &data;
 
     audio_init(&stream, &data);
     audio_start(stream);
-    if (pthread_create(&file_writer, NULL, write_file, &wargs)){
+    /*if (pthread_create(&file_writer, NULL, write_file, &wargs)){
         fprintf(stderr, "Error creating file writer\n");
         close();
         close_file(wargs.fp);
         exit(1);
-    }
+    }*/
 
     nc_setup();
     if (pthread_create(&wave_viewer, NULL, nc_view, &data)){
         fprintf(stderr, "Error creating waveform viewer\n");
         nc_stop();
         close();
-        close_file(wargs.fp);
+        //close_file(wargs.fp);
         exit(1);
     }
 
@@ -78,7 +80,7 @@ int main(int argc, char **argv) {
 
     nc_stop();
     close();
-    close_file(wargs.fp);
+    //close_file(wargs.fp);
 
     return 0;
 }
