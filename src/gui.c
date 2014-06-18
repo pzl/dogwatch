@@ -26,9 +26,14 @@ void gui_init(void){
 
 	gtk_widget_show_all(window);
 
-	gtk_main();
 }
 
+void *gui_start(void *a){
+	(void) a;
+	gtk_main();
+
+	return NULL;
+}
 
 
 static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer user_data){

@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
     PaStream *stream;
     sound data;
     writer wargs;
-    pthread_t file_writer, wave_viewer;
+    pthread_t file_writer, wave_viewer, gui_t;
 
     //wunused
     (void) argc;
@@ -77,6 +77,13 @@ int main(int argc, char **argv) {
     }
 
     gui_init();
+    if (pthread_create(&gui_t, NULL, gui_start, NULL)){
+        fprintf(stderr, "Error starting GTK\n");
+        nc_stop();
+        close();
+        close_file(wargs.fp);
+        exit(1);
+    }
 
     audio_wait(stream);
 
