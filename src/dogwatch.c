@@ -7,22 +7,22 @@
 #include "audioin.h"
 #include "writer.h"
 #include "curse.h"
-#include "gui.h"
+//#include "gui.h"
 
 
 
 static void close(void){
 
+    nc_stop();
     printf("terminating audio connection\n");
     PaError err = Pa_Terminate();
     if (err != paNoError){
         printf("PA terminate Error: %s\n", Pa_GetErrorText(err));
     }
-
-    nc_stop();
 }
 
 static void shutdown(int sig){
+    nc_stop();
     printf("shutting down\n");
     (void) sig; //unused
     close();
@@ -76,6 +76,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+    /*
     gui_init();
     if (pthread_create(&gui_t, NULL, gui_start, NULL)){
         fprintf(stderr, "Error starting GTK\n");
@@ -84,6 +85,7 @@ int main(int argc, char **argv) {
         close_file(wargs.fp);
         exit(1);
     }
+    */
 
     audio_wait(stream);
 
