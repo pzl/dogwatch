@@ -7,7 +7,6 @@
 #include "audioin.h"
 #include "writer.h"
 #include "curse.h"
-//#include "gui.h"
 
 
 
@@ -46,7 +45,7 @@ int main(int argc, char **argv) {
     PaStream *stream;
     sound data;
     writer wargs;
-    pthread_t file_writer, wave_viewer, gui_t;
+    pthread_t file_writer, wave_viewer;
 
     //wunused
     (void) argc;
@@ -75,17 +74,6 @@ int main(int argc, char **argv) {
         close_file(wargs.fp);
         exit(1);
     }
-
-    /*
-    gui_init();
-    if (pthread_create(&gui_t, NULL, gui_start, NULL)){
-        fprintf(stderr, "Error starting GTK\n");
-        nc_stop();
-        close();
-        close_file(wargs.fp);
-        exit(1);
-    }
-    */
 
     audio_wait(stream);
 
