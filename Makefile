@@ -4,16 +4,17 @@ CC = gcc
 CFLAGS += -Wall -Wextra
 CFLAGS += -Wfloat-equal -Wundef -Wshadow -Wpointer-arith -Wcast-align
 CFLAGS += -Wstrict-prototypes -Wwrite-strings -Wpadded -ftrapv
-CFLAGS += -fsanitize=address
-CFLAGS += -march=native
+#CFLAGS += -fsanitize=address
+#CFLAGS += -march=native
 CFLAGS += -pthread
-CFLAGS += $(shell pkg-config --cflags portaudio-2.0 ncurses)
+#CFLAGS += $(shell pkg-config --cflags portaudio-2.0 ncurses)
 SFLAGS = -std=c99 -pedantic
 SRCDIR = src
 OBJDIR = out
 LDFLAGS += 
 INCLUDES = -I.
-LIBS = -lpthread $(shell pkg-config --libs portaudio-2.0 ncurses)
+#LIBS = -lpthread $(shell pkg-config --libs portaudio-2.0 ncurses)
+LIBS = -lpthread -lm -lportaudio -lncurses
 SRCS = $(wildcard $(SRCDIR)/*.c)
 OBJS=$(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 TARGET=dogwatch
