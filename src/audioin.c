@@ -54,6 +54,7 @@ static int get_audio(const void *inputBuffer, void *outputBuffer,
 
     sem_post(&(data->writer));
     sem_post(&(data->drawer));
+    sem_post(&(data->detector));
 
     return paContinue;
 
@@ -80,6 +81,7 @@ void audio_init(PaStream **pstream, sound *data){
 
     sem_init(&(data->drawer),0,0);
     sem_init(&(data->writer),0,0);
+    sem_init(&(data->detector),0,0);
 
     if (data->recorded == NULL){
         printf("Could not allocate audio buffer\n");

@@ -7,6 +7,7 @@
 #include "audioin.h"
 #include "writer.h"
 #include "curse.h"
+#include "detection.h"
 
 
 
@@ -45,7 +46,7 @@ int main(int argc, char **argv) {
     PaStream *stream;
     sound data;
     writer wargs;
-    pthread_t file_writer, wave_viewer;
+    pthread_t file_writer, wave_viewer, crude_detector;
 
     //wunused
     (void) argc;
@@ -66,9 +67,18 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    nc_setup();
+    /*nc_setup();
     if (pthread_create(&wave_viewer, NULL, nc_view, &data)){
         fprintf(stderr, "Error creating waveform viewer\n");
+        nc_stop();
+        close();
+        close_file(wargs.fp);
+        exit(1);
+    }*/
+
+    detection_start();
+    if (pthread_create(&crude_detector, NULL, detect, &data)){
+        fprintf(stderr, "Error creating detection thread\n");
         nc_stop();
         close();
         close_file(wargs.fp);
@@ -78,7 +88,7 @@ int main(int argc, char **argv) {
     audio_wait(stream);
 
 
-    nc_stop();
+    //nc_stop();
     close();
     close_file(wargs.fp);
 

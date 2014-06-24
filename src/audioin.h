@@ -20,6 +20,7 @@ typedef struct sound {
     int plen;
     sem_t drawer;
     sem_t writer;
+    sem_t detector;
     SAMPLE *recorded;
 } sound;
 
