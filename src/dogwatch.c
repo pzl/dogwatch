@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    if (argc < 2 || *argv[1] != 'n'){
+    if (argc >= 2 && *argv[1] == 'n'){
         nc_setup();
         if (pthread_create(&wave_viewer, NULL, nc_view, &data)){
             fprintf(stderr, "Error creating waveform viewer\n");
