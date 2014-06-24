@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <time.h>
 #include "audioin.h"
 #include "detection.h"
 
@@ -16,6 +17,8 @@ void *detect(void *snd){
 	int i;
 	unsigned char barking=0;
 	unsigned int ms=0;
+	time_t rawtime;
+	struct tm * timeinfo;
 
 
 	while (1){
@@ -27,7 +30,9 @@ void *detect(void *snd){
 				if (abs(data->recorded[data->pstart+i]-SAMPLE_SILENCE) >= BARK_THRESHOLD - SAMPLE_SILENCE){
 					barking=1;
 					barks++;
-					printf("barked! %d\n", data->recorded[data->pstart + i]);
+					time(&rawtime);
+					timeinfo = localtime(&rawtime);
+					printf("barked! %s", asctime(timeinfo));
 				}
 			} else {
 				if (abs(data->recorded[data->pstart+i] - SAMPLE_SILENCE) <= CALM - SAMPLE_SILENCE){
@@ -36,7 +41,9 @@ void *detect(void *snd){
 
 					if (ms >= SAMPLE_RATE*CALM_MS/1000){
 						barking=0;
-						printf("barking stopped\n");
+						time(&rawtime);
+						timeinfo = localtime(&rawtime);
+						printf("barking stopped %s", asctime(timeinfo));
 					}
 				} else {
 					//counter starts over since we just broke calm threshold
@@ -51,6 +58,6 @@ void *detect(void *snd){
 }
 
 unsigned int detection_end(void){
-	printf("barked %d times, maybe\n", barks);
+	printf("barked %d times, roughly\n", barks);
 	return barks;
 }
