@@ -6,4 +6,4 @@
 void detection_start(void);
 void *detect(void *data);
 
-#endif DETECT_H
+#endif

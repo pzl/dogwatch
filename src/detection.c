@@ -13,16 +13,17 @@ void detection_start(void){
 
 void *detect(void *snd){
 	sound *data = (sound *)snd;
-	unsigned int i, barks;
+	int i;
+	unsigned int barks;
 
 	barks = 0;
 
 	while (1){
 		sem_wait(&(data->detector));
-		for (i=data->pstart; i<data->pstart + data->plen; i++){
-			if (abs(data->recorded[i]-SAMPLE_SILENCE) >= BARK_THRESHOLD - SAMPLE_SILENCE){
+		for (i=0; i<data->plen; i++){
+			if (abs(data->recorded[data->pstart+i]-SAMPLE_SILENCE) >= BARK_THRESHOLD - SAMPLE_SILENCE){
 				barks++;
-				printf("barked! %d\n", data->recorded[i]);
+				printf("barked! %d\n", data->recorded[data->pstart + i]);
 			}
 		}
 	}
