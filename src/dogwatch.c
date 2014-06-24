@@ -71,14 +71,16 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    /*nc_setup();
-    if (pthread_create(&wave_viewer, NULL, nc_view, &data)){
-        fprintf(stderr, "Error creating waveform viewer\n");
-        nc_stop();
-        close();
-        close_file(wargs.fp);
-        exit(1);
-    }*/
+    if (argc < 2 || *argv[1] != 'n'){
+        nc_setup();
+        if (pthread_create(&wave_viewer, NULL, nc_view, &data)){
+            fprintf(stderr, "Error creating waveform viewer\n");
+            nc_stop();
+            close();
+            close_file(wargs.fp);
+            exit(1);
+        }
+    }
 
     detection_start();
     if (pthread_create(&crude_detector, NULL, detect, &data)){
