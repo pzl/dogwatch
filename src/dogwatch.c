@@ -12,6 +12,7 @@
 
 
 static void close(void){
+    unsigned int barks;
 
     nc_stop();
     printf("terminating audio connection\n");
@@ -19,6 +20,9 @@ static void close(void){
     if (err != paNoError){
         printf("PA terminate Error: %s\n", Pa_GetErrorText(err));
     }
+
+    barks = detection_end();
+
 }
 
 static void shutdown(int sig){

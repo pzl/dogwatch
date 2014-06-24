@@ -5,26 +5,52 @@
 #include "audioin.h"
 #include "detection.h"
 
-
+unsigned int barks = 0;
 
 void detection_start(void){
-
+	barks=0;
 }
 
 void *detect(void *snd){
 	sound *data = (sound *)snd;
 	int i;
-	unsigned int barks;
+	unsigned char barking=0;
+	unsigned int ms=0;
 
-	barks = 0;
 
 	while (1){
 		sem_wait(&(data->detector));
+
 		for (i=0; i<data->plen; i++){
-			if (abs(data->recorded[data->pstart+i]-SAMPLE_SILENCE) >= BARK_THRESHOLD - SAMPLE_SILENCE){
-				barks++;
-				printf("barked! %d\n", data->recorded[data->pstart + i]);
+			if (!barking){
+				//if not currently inside a bark cooldown, check for spikes
+				if (abs(data->recorded[data->pstart+i]-SAMPLE_SILENCE) >= BARK_THRESHOLD - SAMPLE_SILENCE){
+					barking=1;
+					barks++;
+					printf("barked! %d\n", data->recorded[data->pstart + i]);
+				}
+			} else {
+				if (abs(data->recorded[data->pstart+i] - SAMPLE_SILENCE) <= CALM - SAMPLE_SILENCE){
+					//count the consecutive quiet frames
+					ms++;
+
+					if (ms >= SAMPLE_RATE*CALM_MS/1000){
+						barking=0;
+						printf("barking stopped\n");
+					}
+				} else {
+					//counter starts over since we just broke calm threshold
+					ms = 0;
+				}
 			}
+
 		}
 	}
+
+	return NULL;
+}
+
+unsigned int detection_end(void){
+	printf("barked %d times, maybe\n", barks);
+	return barks;
 }
