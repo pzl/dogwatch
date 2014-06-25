@@ -56,6 +56,11 @@ int main(int argc, char **argv) {
     (void) argc;
     (void) argv;
 
+    if (argc >= 2 && *argv[1] == 'r'){
+        png_view_create("out/record.raw","hello.png");
+        return 0;
+    }
+
 
     signal(SIGINT, shutdown);
 
