@@ -9,32 +9,55 @@ void png_view_create(const char *readfile, const char *outfile){
 	int fd;
 	struct stat st;
 	long long fsize;
-	int flen, i, rd;
+	int flen, i, rd, rows, cur_row;
 	SAMPLE buf[REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL];
+	static const double dashed[] = {14.0, 6.0};
 
 	fd = fileno(infile);
 	fstat(fd, &st);
 	fsize = st.st_size;
 
 	flen = (int) fsize/4;
+	rows = 3;
 
 	printf("file size: %lld\n", fsize);
 	printf("png length: %d\n", flen);
+	printf("rows: %d\n", rows);
 
 
-	cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, REVIEW_FILE_WIDTH, REVIEW_FILE_HEIGHT);
+	cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, REVIEW_FILE_WIDTH, REVIEW_ROW_HEIGHT*rows);
 	cairo_t *cr = cairo_create(surface);
 
+	//background all white
 	cairo_set_source_rgb(cr,1.0,1.0,1.0);
-	cairo_rectangle(cr,0,0,REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL,REVIEW_FILE_HEIGHT);
+	cairo_rectangle(cr,0,0,REVIEW_FILE_WIDTH,REVIEW_ROW_HEIGHT*rows);
 	cairo_fill(cr);
 
+	//baselines for each row
 	cairo_set_source_rgb(cr,0.3,0.3,0.3);
 	cairo_set_line_width(cr,1);
-	cairo_move_to(cr,0,REVIEW_FILE_HEIGHT/2+0.5);
-	cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
+	for (i=0; i<rows; i++){
+		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2+0.5);
+		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
+	}
 	cairo_stroke(cr);
-	cairo_move_to(cr,0,REVIEW_FILE_HEIGHT/2+0.5);
+
+	//extent lines between rows
+	cairo_set_source_rgb(cr,0.8,0.8,0.8);
+	//i starts at 1 since we don't need line at top of file
+	for (i=1; i<rows; i++){
+		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT+0.5);
+		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
+	}
+	cairo_set_dash(cr,dashed,1,0);
+	cairo_stroke(cr);
+
+	//turn off dash
+	cairo_set_dash(cr,NULL,0,0);
+
+
+	//make actual data
+	cairo_move_to(cr,0,REVIEW_ROW_HEIGHT/2+0.5);
 	cairo_set_source_rgb(cr,0.0,1.0,1.0);
 
 
