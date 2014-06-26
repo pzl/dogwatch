@@ -9,7 +9,7 @@ void png_view_create(const char *readfile, const char *outfile){
 	int fd;
 	struct stat st;
 	long long fsize;
-	int flen, i, rd, rows, cur_row;
+	int flen, i, j, rd, rows, cur_row;
 	SAMPLE buf[REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL];
 	static const double dashed[] = {14.0, 6.0};
 
@@ -18,7 +18,7 @@ void png_view_create(const char *readfile, const char *outfile){
 	fsize = st.st_size;
 
 	flen = (int) fsize/4;
-	rows = 3;
+	rows = 5;
 
 	printf("file size: %lld\n", fsize);
 	printf("png length: %d\n", flen);
@@ -57,19 +57,19 @@ void png_view_create(const char *readfile, const char *outfile){
 
 
 	//make actual data
-	cairo_move_to(cr,0,REVIEW_ROW_HEIGHT/2+0.5);
 	cairo_set_source_rgb(cr,0.0,1.0,1.0);
+	for (i=0; i<rows; i++){
+		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2+0.5);
 
+		rd = fread(buf, CHANNELS * sizeof(SAMPLE), REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL, infile);
+		if (rd != REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL){
+			fprintf(stderr, "error reading row %d: wanted %d samples from file for %d\n", i, REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL, rd);
+		}
 
-	rd = fread(buf, CHANNELS * sizeof(SAMPLE), REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL, infile);
-	if (rd != REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL){
-		fprintf(stderr, "error reading %d samples from file\n", REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL);
+		for (j=0; j<rd; j++){
+			cairo_line_to(cr,j/(SAMPLES_PER_PIXEL*1.0), i*REVIEW_ROW_HEIGHT + buf[j]+0.5);
+		}
 	}
-
-	for (i=0; i<REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL; i++){
-		cairo_line_to(cr,i/(SAMPLES_PER_PIXEL*1.0),buf[i]+0.5);
-	}
-
 
 
 	fclose(infile);
