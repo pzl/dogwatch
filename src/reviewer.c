@@ -25,6 +25,10 @@ void png_view_create(const char *readfile, const char *outfile){
 	cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, REVIEW_FILE_WIDTH, REVIEW_FILE_HEIGHT);
 	cairo_t *cr = cairo_create(surface);
 
+	cairo_set_source_rgb(cr,1.0,1.0,1.0);
+	cairo_rectangle(cr,0,0,REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL,REVIEW_FILE_HEIGHT);
+	cairo_fill(cr);
+
 	cairo_set_source_rgb(cr,0.3,0.3,0.3);
 	cairo_set_line_width(cr,1);
 	cairo_move_to(cr,0,REVIEW_FILE_HEIGHT/2+0.5);
