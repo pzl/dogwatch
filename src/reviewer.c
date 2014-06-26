@@ -12,13 +12,15 @@ void png_view_create(const char *readfile, const char *outfile){
 	int flen, i, j, rd, rows, cur_row;
 	SAMPLE buf[REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL];
 	static const double dashed[] = {14.0, 6.0};
+	float ms_label;
+	char label[80]; /* @todo overflow detection shit */
 
 	fd = fileno(infile);
 	fstat(fd, &st);
 	fsize = st.st_size;
 
 	flen = (int) fsize/4;
-	rows = 5;
+	rows = 9;
 
 	printf("file size: %lld\n", fsize);
 	printf("png length: %d\n", flen);
@@ -58,7 +60,16 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	//make actual data
 	cairo_set_source_rgb(cr,0.0,1.0,1.0);
+	cairo_select_font_face(cr,"sans serif",CAIRO_FONT_SLANT_NORMAL,CAIRO_FONT_WEIGHT_NORMAL);
+	cairo_set_font_size(cr,13);
 	for (i=0; i<rows; i++){
+		//timecode label
+		cairo_set_source_rgb(cr,0.0,0.0,0.0);
+		cairo_move_to(cr,5,i*REVIEW_ROW_HEIGHT + 15.5);
+		sprintf(label, "%f ms",i*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL/(SAMPLE_RATE*1.0)*1000);
+		cairo_show_text(cr,label);
+
+		cairo_set_source_rgb(cr,0.0,1.0,1.0);
 		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2+0.5);
 
 		rd = fread(buf, CHANNELS * sizeof(SAMPLE), REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL, infile);
