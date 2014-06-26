@@ -10,7 +10,7 @@ void png_view_create(const char *readfile, const char *outfile){
 	struct stat st;
 	long long fsize;
 	int flen, i, rd;
-	SAMPLE buf[REVIEW_FILE_WIDTH];
+	SAMPLE buf[REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL];
 
 	fd = fileno(infile);
 	fstat(fd, &st);
@@ -34,13 +34,13 @@ void png_view_create(const char *readfile, const char *outfile){
 	cairo_set_source_rgb(cr,0.0,1.0,1.0);
 
 
-	rd = fread(buf, CHANNELS * sizeof(SAMPLE), REVIEW_FILE_WIDTH, infile);
-	if (rd != REVIEW_FILE_WIDTH){
-		fprintf(stderr, "error reading %d samples from file\n", REVIEW_FILE_WIDTH);
+	rd = fread(buf, CHANNELS * sizeof(SAMPLE), REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL, infile);
+	if (rd != REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL){
+		fprintf(stderr, "error reading %d samples from file\n", REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL);
 	}
 
-	for (i=0; i<REVIEW_FILE_WIDTH; i++){
-		cairo_line_to(cr,i,buf[i]+0.5);
+	for (i=0; i<REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL; i++){
+		cairo_line_to(cr,i/(SAMPLES_PER_PIXEL*1.0),buf[i]+0.5);
 	}
 
 
