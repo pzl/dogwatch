@@ -5,6 +5,9 @@
 #include "detection.h"
 #include "reviewer.h"
 
+static void data_config(cairo_t *);
+
+
 void png_view_create(const char *readfile, const char *outfile){
 	FILE *infile = fopen(readfile, "r+b");
 	int fd;
@@ -27,7 +30,7 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	flen = (int) fsize/4;
 	rows = 30;
-	offset_row = 20;
+	offset_row = 0;
 
 	printf("file size: %lld\n", fsize);
 	printf("png length: %d\n", flen);
@@ -89,9 +92,8 @@ void png_view_create(const char *readfile, const char *outfile){
 
 
 	//make actual data
-	cairo_set_source_rgb(cr,0.0,1.0,1.0);
-	cairo_select_font_face(cr,"sans serif",CAIRO_FONT_SLANT_NORMAL,CAIRO_FONT_WEIGHT_NORMAL);
-	cairo_set_font_size(cr,13);
+	data_config(cr);
+	samples_of_silence=0;
 	for (i=0; i<rows; i++){
 		//timecode label
 		cairo_set_source_rgb(cr,0.0,0.0,0.0);
@@ -119,12 +121,17 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	fclose(infile);
 
-
-	cairo_set_line_width(cr,1);
 	cairo_stroke(cr);
 
 	cairo_destroy(cr);
 	cairo_surface_write_to_png(surface, outfile);
 	cairo_surface_destroy(surface);
 	return;
+}
+
+static void data_config(cairo_t *cr){
+	cairo_set_source_rgb(cr,0.0,1.0,1.0);
+	cairo_select_font_face(cr,"sans serif",CAIRO_FONT_SLANT_NORMAL,CAIRO_FONT_WEIGHT_NORMAL);
+	cairo_set_font_size(cr,13);
+	cairo_set_line_width(cr,1);
 }
