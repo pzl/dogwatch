@@ -10,7 +10,7 @@ void png_view_create(const char *readfile, const char *outfile){
 	int fd;
 	struct stat st;
 	long long fsize;
-	int flen, i, j, rd, rows, cur_row;
+	int flen, i, j, rd, rows, cur_row, offset_row;
 	SAMPLE buf[REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL];
 	static const double wide_dash[] = {14.0, 6.0},
 						thin_dash[] = {4.0,8.0};
@@ -26,7 +26,8 @@ void png_view_create(const char *readfile, const char *outfile){
 	fsize = st.st_size;
 
 	flen = (int) fsize/4;
-	rows = 9;
+	rows = 30;
+	offset_row = 20;
 
 	printf("file size: %lld\n", fsize);
 	printf("png length: %d\n", flen);
@@ -95,15 +96,19 @@ void png_view_create(const char *readfile, const char *outfile){
 		//timecode label
 		cairo_set_source_rgb(cr,0.0,0.0,0.0);
 		cairo_move_to(cr,5,i*REVIEW_ROW_HEIGHT + 15.5);
-		sprintf(label, "%-.2f s",i*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL/(SAMPLE_RATE*1.0));
+		sprintf(label, "%-.2f s",(i*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL+offset_row*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL)/(SAMPLE_RATE*1.0));
 		cairo_show_text(cr,label);
 
 		cairo_set_source_rgb(cr,0.0,1.0,1.0);
 		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2+0.5);
 
+		for (j=0; j<offset_row; j++){
+			fread(buf,CHANNELS* sizeof(SAMPLE), REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL, infile);
+		}
+
 		rd = fread(buf, CHANNELS * sizeof(SAMPLE), REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL, infile);
 		if (rd != REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL){
-			fprintf(stderr, "error reading row %d: wanted %d samples from file for %d\n", i, REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL, rd);
+			fprintf(stderr, "error reading row %d: wanted %d samples from file for %d\n", i+offset_row, REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL, rd);
 		}
 
 		for (j=0; j<rd; j++){
