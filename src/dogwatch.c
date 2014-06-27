@@ -8,6 +8,7 @@
 #include "writer.h"
 #include "curse.h"
 #include "detection.h"
+#include "reviewer.h"
 
 
 
