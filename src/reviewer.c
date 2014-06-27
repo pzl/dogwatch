@@ -2,6 +2,7 @@
 #include <cairo.h>
 #include <sys/stat.h>
 #include "audioin.h"
+#include "detection.h"
 #include "reviewer.h"
 
 void png_view_create(const char *readfile, const char *outfile){
@@ -11,7 +12,8 @@ void png_view_create(const char *readfile, const char *outfile){
 	long long fsize;
 	int flen, i, j, rd, rows, cur_row;
 	SAMPLE buf[REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL];
-	static const double dashed[] = {14.0, 6.0};
+	static const double wide_dash[] = {14.0, 6.0},
+						thin_dash[] = {4.0,8.0};
 	float ms_label;
 	char label[80]; /* @todo overflow detection shit */
 
@@ -39,7 +41,7 @@ void png_view_create(const char *readfile, const char *outfile){
 	cairo_rectangle(cr,0,0,REVIEW_FILE_WIDTH,REVIEW_ROW_HEIGHT*rows);
 	cairo_fill(cr);
 
-	//baselines for each row
+	//center lines for each row
 	cairo_set_source_rgb(cr,0.3,0.3,0.3);
 	cairo_set_line_width(cr,1);
 	for (i=0; i<rows; i++){
@@ -48,15 +50,38 @@ void png_view_create(const char *readfile, const char *outfile){
 	}
 	cairo_stroke(cr);
 
-	//extent lines between rows
+	//extent/limit lines between rows
 	cairo_set_source_rgb(cr,0.8,0.8,0.8);
 	//i starts at 1 since we don't need line at top of file
 	for (i=1; i<rows; i++){
 		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT+0.5);
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
-	cairo_set_dash(cr,dashed,1,0);
+	cairo_set_dash(cr,wide_dash,1,0);
 	cairo_stroke(cr);
+
+	//detector amplitude marker
+	cairo_set_source_rgb(cr,1.0,0.4,0.4);
+	for (i=0; i<rows; i++){
+		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 + BARK_THRESHOLD - SAMPLE_SILENCE + 0.5);
+		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
+		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 - (BARK_THRESHOLD - SAMPLE_SILENCE) + 0.5);
+		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
+	}
+	cairo_set_dash(cr,thin_dash,1,0);
+	cairo_stroke(cr);
+
+	//cooldown/calm amplitude marker
+	cairo_set_source_rgb(cr,0.4,0.8,1.0);
+	for (i=0; i<rows; i++){
+		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 + CALM - SAMPLE_SILENCE + 0.5);
+		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
+		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 - (CALM - SAMPLE_SILENCE) + 0.5);
+		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
+	}
+	cairo_set_dash(cr,thin_dash,1,0);
+	cairo_stroke(cr);
+
 
 	//turn off dash
 	cairo_set_dash(cr,NULL,0,0);
