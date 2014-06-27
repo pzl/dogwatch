@@ -61,6 +61,7 @@ void *nc_view(void *snd){
 		}
 		refresh();
 	}
+	return NULL;
 }
 
 static wave_pos map(unsigned char c){

@@ -15,6 +15,10 @@ void png_view_create(const char *readfile, const char *outfile){
 	float ms_label;
 	char label[80]; /* @todo overflow detection shit */
 
+
+	(void) cur_row;
+	(void) ms_label;
+
 	fd = fileno(infile);
 	fstat(fd, &st);
 	fsize = st.st_size;

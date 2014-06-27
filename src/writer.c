@@ -20,13 +20,13 @@ void *write_file(void *wargs){
 	SAMPLE *packet;
 
 
-
-
 	while (1){
 		sem_wait(&(args->data->writer));
 		packet = &(args->data->recorded[args->data->pstart]);
 		fwrite(packet, CHANNELS*sizeof(SAMPLE), args->data->plen, args->fp);
 	}
+
+	return NULL;
 }
 
 void close_file(FILE *fp){

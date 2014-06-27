@@ -3,7 +3,8 @@ VERSION = 0.0.1
 CC = gcc
 CFLAGS += -Wall -Wextra
 CFLAGS += -Wfloat-equal -Wundef -Wshadow -Wpointer-arith -Wcast-align
-CFLAGS += -Wstrict-prototypes -Wwrite-strings -Wpadded -ftrapv
+CFLAGS += -Wstrict-prototypes -Wwrite-strings -ftrapv
+#CFLAGS += -Wpadded
 #CFLAGS += -fsanitize=address
 #CFLAGS += -march=native
 CFLAGS += -pthread
