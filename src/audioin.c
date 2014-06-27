@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #include <portaudio.h>
 #include <pthread.h>
 #include <semaphore.h>
