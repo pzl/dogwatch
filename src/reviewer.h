@@ -5,6 +5,9 @@
 #define REVIEW_FILE_WIDTH 5000
 #define SAMPLES_PER_PIXEL 16
 
+#define NOISE_OF_INTEREST_LEVEL 140
+#define SEC_OF_QUIET_TILL_SKIP	1
+
 void png_view_create(const char *audiofile, const char *pngfile);
 
 #endif

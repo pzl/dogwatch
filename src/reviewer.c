@@ -13,8 +13,8 @@ void png_view_create(const char *readfile, const char *outfile){
 	FILE *infile = fopen(readfile, "r+b");
 	int fd;
 	struct stat st;
-	long long fsize;
-	int flen, i, j, rd, rows, cur_row, offset_row;
+	long long fsize, samples_of_silence=0;
+	int flen, i, j, rd, rows, cur_row, offset_row, quiet_axis_break=0;
 	SAMPLE buf[REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL];
 	static const double wide_dash[] = {14.0, 6.0},
 						thin_dash[] = {4.0,8.0};
@@ -87,6 +87,18 @@ void png_view_create(const char *readfile, const char *outfile){
 	cairo_set_dash(cr,thin_dash,1,0);
 	cairo_stroke(cr);
 
+	//uninteresting noise level
+	cairo_set_source_rgb(cr,0.4,0.8,0.4);
+	for (i=0; i<rows; i++){
+		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 + NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE + 0.5);
+		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
+		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 - (NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE) + 0.5);
+		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
+	}
+	cairo_set_dash(cr,thin_dash,1,0);
+	cairo_stroke(cr);
+
+
 
 
 
@@ -113,7 +125,48 @@ void png_view_create(const char *readfile, const char *outfile){
 		}
 
 		for (j=0; j<rd; j++){
-			cairo_line_to(cr,j/(SAMPLES_PER_PIXEL*1.0), i*REVIEW_ROW_HEIGHT + buf[j]+0.5);
+			if (quiet_axis_break){
+				if (buf[j] > NOISE_OF_INTEREST_LEVEL || buf[j] < SAMPLE_SILENCE - (NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE)){
+					//broke the silence
+					samples_of_silence=0;
+					quiet_axis_break=0;
+					cairo_move_to(cr,j/(SAMPLES_PER_PIXEL*1.0), i*REVIEW_ROW_HEIGHT+13.5);
+					label_config(cr);
+					sprintf(label, "%-.2f s",
+							( i*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
+							  offset_row*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL +
+							  j)
+							/(SAMPLE_RATE*1.0) );
+					cairo_show_text(cr,label);
+					data_config(cr);
+					cairo_move_to(cr,j/(SAMPLES_PER_PIXEL*1.0),i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2+0.5);
+					cairo_line_to(cr,j/(SAMPLES_PER_PIXEL*1.0), i*REVIEW_ROW_HEIGHT + buf[j]+0.5);
+				} else {
+					//still quiet, move on to next sample
+					continue;
+				}
+			} else {
+				if (buf[j] < NOISE_OF_INTEREST_LEVEL && buf[j] > SAMPLE_SILENCE - (NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE)){
+					samples_of_silence++;
+				}
+
+				if (samples_of_silence >= SEC_OF_QUIET_TILL_SKIP  * SAMPLE_RATE){
+					//been quiet long enough, start breaking the axis
+					quiet_axis_break=1;
+					cairo_stroke(cr); //finish previous lines
+					label_config(cr);
+					cairo_move_to(cr,j/SAMPLES_PER_PIXEL-50,i*REVIEW_ROW_HEIGHT+13.5);
+					sprintf(label, "%-.2f s",
+							( i*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
+							  offset_row*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL +
+							  j)
+							/(SAMPLE_RATE*1.0) );
+					cairo_show_text(cr,label);
+					data_config(cr);
+				} else {
+					cairo_line_to(cr,j/(SAMPLES_PER_PIXEL*1.0), i*REVIEW_ROW_HEIGHT + buf[j]+0.5);
+				}
+			}
 		}
 	}
 
