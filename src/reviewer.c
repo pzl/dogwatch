@@ -95,7 +95,7 @@ void png_view_create(const char *readfile, const char *outfile){
 		//timecode label
 		cairo_set_source_rgb(cr,0.0,0.0,0.0);
 		cairo_move_to(cr,5,i*REVIEW_ROW_HEIGHT + 15.5);
-		sprintf(label, "%f ms",i*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL/(SAMPLE_RATE*1.0)*1000);
+		sprintf(label, "%-.2f s",i*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL/(SAMPLE_RATE*1.0));
 		cairo_show_text(cr,label);
 
 		cairo_set_source_rgb(cr,0.0,1.0,1.0);
