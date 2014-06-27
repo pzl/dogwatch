@@ -187,9 +187,16 @@ static void label_config(cairo_t *cr){
 static void timecode(cairo_t *cr, float x, float y, float t){
 	char label[80]; /* @todo guarantee enough length here */
 
-
 	label_config(cr);
 	cairo_move_to(cr,x,y+13.5);
-	sprintf(label, "%-.2fs",t);
+	if (t < 60.0){
+		sprintf(label, "%-.2fs",t);
+	} else if (t < 3600.0){
+		sprintf(label, "%-.2fm",t/60.0);
+	} else if (t < 86400.0){
+		sprintf(label, "%-.2fh",t/3600.0);
+	} else {
+		sprintf(label, "%-.2fd",t/86400.0);
+	}
 	cairo_show_text(cr,label);
 }
