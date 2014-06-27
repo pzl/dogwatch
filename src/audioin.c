@@ -52,9 +52,9 @@ static int get_audio(const void *inputBuffer, void *outputBuffer,
     data->frameIndex += fpb;
     data->plen = fpb;
 
-    sem_post(&(data->writer));
-    sem_post(&(data->drawer));
-    sem_post(&(data->detector));
+    sem_post(data->writer);
+    sem_post(data->drawer);
+    sem_post(data->detector);
 
     return paContinue;
 
@@ -79,9 +79,26 @@ void audio_init(PaStream **pstream, sound *data){
     numBytes = numSamples * sizeof(SAMPLE);
     data->recorded = (SAMPLE *) malloc(numBytes);
 
-    sem_init(&(data->drawer),0,0);
-    sem_init(&(data->writer),0,0);
-    sem_init(&(data->detector),0,0);
+    data->drawer = sem_open("dogwatch-drawer",O_CREAT,0644,0);
+    data->writer = sem_open("dogwatch-writer",O_CREAT,0644,0);
+    data->detector = sem_open("dogwatch-detector",O_CREAT,0644,0);
+
+    if (data->drawer == SEM_FAILED){
+        fprintf(stderr, "unable to create drawer semaphore\n");
+        sem_unlink("dogwatch-drawer");
+        exit(1);
+    }
+    if (data->writer == SEM_FAILED){
+        fprintf(stderr, "unable to create writer semaphore\n");
+        sem_unlink("dogwatch-writer");
+        exit(1);
+    }
+    if (data->detector == SEM_FAILED){
+        fprintf(stderr, "unable to create detector semaphore\n");
+        sem_unlink("dogwatch-detector");
+        exit(1);
+    }
+
 
     if (data->recorded == NULL){
         printf("Could not allocate audio buffer\n");

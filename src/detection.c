@@ -22,7 +22,7 @@ void *detect(void *snd){
 
 
 	while (1){
-		sem_wait(&(data->detector));
+		sem_wait(data->detector);
 
 		for (i=0; i<data->plen; i++){
 			if (!barking){

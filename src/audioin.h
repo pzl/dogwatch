@@ -18,9 +18,9 @@ typedef struct sound {
     int maxFrameIndex;
     int pstart;
     int plen;
-    sem_t drawer;
-    sem_t writer;
-    sem_t detector;
+    sem_t *drawer;
+    sem_t *writer;
+    sem_t *detector;
     SAMPLE *recorded;
 } sound;
 

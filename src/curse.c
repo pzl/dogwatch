@@ -42,7 +42,7 @@ void *nc_view(void *snd){
 	wave_pos ln;
 
 	while (1){
-		sem_wait(&(data->drawer));
+		sem_wait(data->drawer);
 
 		clear();
 		if (has_colors()){
