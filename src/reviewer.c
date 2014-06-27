@@ -17,7 +17,6 @@ void png_view_create(const char *readfile, const char *outfile){
 	long long fsize, samples_of_silence=0, samples_seen=0;
 	int i, j, rd,
 		max_rows = 30,
-		offset_row = 0,
 		quiet_axis_break=0,
 		lastY=0;
 	float posX = 0;
@@ -35,7 +34,6 @@ void png_view_create(const char *readfile, const char *outfile){
 
 
 	printf("file size: %lld\n", fsize);
-	printf("row offset: %d\n", offset_row);
 	printf("max rows: %d\n", max_rows);
 
 
@@ -100,11 +98,6 @@ void png_view_create(const char *readfile, const char *outfile){
 	cairo_stroke(cr);
 
 
-	//skip over the offsets
-	for (j=0; j<offset_row; j++){
-		fread(buf,CHANNELS* sizeof(SAMPLE), REVIEW_BUFFER_SIZE, infile);
-	}
-
 
 	//make actual data
 
@@ -117,7 +110,10 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	while ((rd = fread(buf, CHANNELS * sizeof(SAMPLE), REVIEW_BUFFER_SIZE, infile)) > 0){
 		if (rd != REVIEW_BUFFER_SIZE){
-			fprintf(stderr, "error reading row %d: wanted %d samples from file, got %d\n", lastY/REVIEW_ROW_HEIGHT + offset_row, REVIEW_BUFFER_SIZE, rd);
+			fprintf(stderr, "error reading row %d: wanted %d samples from file, got %d\n", 
+				lastY/REVIEW_ROW_HEIGHT, 
+				REVIEW_BUFFER_SIZE, 
+				rd);
 		}
 
 		//if new row
@@ -126,8 +122,7 @@ void png_view_create(const char *readfile, const char *outfile){
 			posX=0.0;
 			//row beginning label
 			timecode(cr,5,lastY,
-						(lastY/REVIEW_ROW_HEIGHT * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
-						offset_row * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL)
+						(lastY/REVIEW_ROW_HEIGHT * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL)
 						/(SAMPLE_RATE*1.0));
 			cairo_move_to(cr,0,lastY + REVIEW_ROW_HEIGHT/2+0.5);
 			data_config(cr);
@@ -144,7 +139,6 @@ void png_view_create(const char *readfile, const char *outfile){
 					quiet_axis_break=0;
 					timecode(cr, posX, lastY, 
 								(lastY/REVIEW_ROW_HEIGHT * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL +
-								offset_row*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
 								samples_seen)
 								/(SAMPLE_RATE*1.0) );
 					data_config(cr);
@@ -164,10 +158,9 @@ void png_view_create(const char *readfile, const char *outfile){
 					quiet_axis_break=1;
 					cairo_stroke(cr); //finish previous lines
 					timecode(cr,posX - 50,lastY,
-								(  lastY/REVIEW_ROW_HEIGHT * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
-									  offset_row *REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL +
-									  samples_seen)
-									/(SAMPLE_RATE*1.0));
+								(lastY/REVIEW_ROW_HEIGHT * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
+									samples_seen)
+								/(SAMPLE_RATE*1.0));
 					data_config(cr);
 				} else {
 					cairo_line_to(cr,posX, lastY + REVIEW_ROW_HEIGHT - buf[j] + 0.5);
