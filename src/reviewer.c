@@ -7,6 +7,7 @@
 
 static void data_config(cairo_t *);
 static void label_config(cairo_t *);
+static void timecode(cairo_t *, float x, float y, float time);
 
 
 void png_view_create(const char *readfile, const char *outfile){
@@ -18,12 +19,8 @@ void png_view_create(const char *readfile, const char *outfile){
 	SAMPLE buf[REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL];
 	static const double wide_dash[] = {14.0, 6.0},
 						thin_dash[] = {4.0,8.0};
-	float ms_label;
-	char label[80]; /* @todo overflow detection shit */
 
 
-	(void) cur_row;
-	(void) ms_label;
 
 	fd = fileno(infile);
 	fstat(fd, &st);
@@ -105,12 +102,12 @@ void png_view_create(const char *readfile, const char *outfile){
 	//make actual data
 	data_config(cr);
 	samples_of_silence=0;
-	for (i=0; i<rows; i++){
-		//timecode label
-		label_config(cr);
-		cairo_move_to(cr,5,i*REVIEW_ROW_HEIGHT + 15.5);
-		sprintf(label, "%-.2f s",(i*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL+offset_row*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL)/(SAMPLE_RATE*1.0));
-		cairo_show_text(cr,label);
+	for (i=0; i<rows i++){
+		//row beginning label
+		timecode(cr,5,i*REVIEW_ROW_HEIGHT,
+					(i*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
+					offset_row*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL)
+					/(SAMPLE_RATE*1.0));
 
 		data_config(cr);
 		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2+0.5);
@@ -130,14 +127,11 @@ void png_view_create(const char *readfile, const char *outfile){
 					//broke the silence
 					samples_of_silence=0;
 					quiet_axis_break=0;
-					cairo_move_to(cr,j/(SAMPLES_PER_PIXEL*1.0), i*REVIEW_ROW_HEIGHT+13.5);
-					label_config(cr);
-					sprintf(label, "%-.2f s",
-							( i*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
-							  offset_row*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL +
-							  j)
-							/(SAMPLE_RATE*1.0) );
-					cairo_show_text(cr,label);
+					timecode(cr, j/(SAMPLES_PER_PIXEL*1.0), i*REVIEW_ROW_HEIGHT, 
+								(i*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
+								offset_row*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
+								j)
+								/(SAMPLE_RATE*1.0) );
 					data_config(cr);
 					cairo_move_to(cr,j/(SAMPLES_PER_PIXEL*1.0),i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2+0.5);
 					cairo_line_to(cr,j/(SAMPLES_PER_PIXEL*1.0), i*REVIEW_ROW_HEIGHT + buf[j]+0.5);
@@ -154,14 +148,11 @@ void png_view_create(const char *readfile, const char *outfile){
 					//been quiet long enough, start breaking the axis
 					quiet_axis_break=1;
 					cairo_stroke(cr); //finish previous lines
-					label_config(cr);
-					cairo_move_to(cr,j/SAMPLES_PER_PIXEL-50,i*REVIEW_ROW_HEIGHT+13.5);
-					sprintf(label, "%-.2f s",
-							( i*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
-							  offset_row*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL +
-							  j)
-							/(SAMPLE_RATE*1.0) );
-					cairo_show_text(cr,label);
+					timecode(cr,j/SAMPLES_PER_PIXEL-50,i*REVIEW_ROW_HEIGHT,
+								( i*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
+									  offset_row*REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL +
+									  j)
+									/(SAMPLE_RATE*1.0));
 					data_config(cr);
 				} else {
 					cairo_line_to(cr,j/(SAMPLES_PER_PIXEL*1.0), i*REVIEW_ROW_HEIGHT + buf[j]+0.5);
@@ -191,4 +182,14 @@ static void label_config(cairo_t *cr){
 	cairo_select_font_face(cr,"sans serif",CAIRO_FONT_SLANT_NORMAL,CAIRO_FONT_WEIGHT_NORMAL);
 	cairo_set_font_size(cr,13);
 	cairo_set_source_rgb(cr,0.0,0.0,0.0);
+}
+
+static void timecode(cairo_t *cr, float x, float y, float t){
+	char label[80]; /* @todo guarantee enough length here */
+
+
+	label_config(cr);
+	cairo_move_to(cr,x,y+13.5);
+	sprintf(label, "%-.2fs",t);
+	cairo_show_text(cr,label);
 }
