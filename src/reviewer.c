@@ -153,6 +153,9 @@ void png_view_create(const char *readfile, const char *outfile){
 			} else {
 				if (buf[j] < NOISE_OF_INTEREST_LEVEL && buf[j] > SAMPLE_SILENCE - (NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE)){
 					samples_of_silence++;
+				} else {
+					//peaked above NOIL
+					samples_of_silence=0;
 				}
 
 				if (samples_of_silence >= SEC_OF_QUIET_TILL_SKIP  * SAMPLE_RATE){
