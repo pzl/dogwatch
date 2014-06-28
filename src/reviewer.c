@@ -128,6 +128,11 @@ void png_view_create(const char *readfile, const char *outfile){
 						/(SAMPLE_RATE*1.0));
 			cairo_move_to(cr,0,lastY + REVIEW_ROW_HEIGHT/2+0.5);
 			data_config(cr);
+
+			if (lastY+REVIEW_ROW_HEIGHT > max_rows*REVIEW_ROW_HEIGHT){
+				lastY -= REVIEW_ROW_HEIGHT;
+				break;
+			}
 		}
 
 
