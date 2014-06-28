@@ -8,6 +8,7 @@
 static void data_config(cairo_t *);
 static void label_config(cairo_t *);
 static void timecode(cairo_t *, float x, float y, float time);
+static void axis_break(cairo_t *, float *x, float y, float time);
 
 
 void png_view_create(const char *readfile, const char *outfile){
@@ -157,12 +158,10 @@ void png_view_create(const char *readfile, const char *outfile){
 				if (samples_of_silence >= SEC_OF_QUIET_TILL_SKIP  * SAMPLE_RATE){
 					//been quiet long enough, start breaking the axis
 					quiet_axis_break=1;
-					cairo_stroke(cr); //finish previous lines
-					timecode(cr,posX - 50,lastY,
-								(lastY/REVIEW_ROW_HEIGHT * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
+					axis_break(cr,&posX, lastY + REVIEW_ROW_HEIGHT/2,
+						(lastY/REVIEW_ROW_HEIGHT * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
 									samples_seen)
 								/(SAMPLE_RATE*1.0));
-					data_config(cr);
 				} else {
 					cairo_line_to(cr,posX, lastY + REVIEW_ROW_HEIGHT - buf[j] + 0.5);
 					posX += 1/(SAMPLES_PER_PIXEL*1.0);
@@ -209,4 +208,30 @@ static void timecode(cairo_t *cr, float x, float y, float t){
 		sprintf(label, "%-.2fd",t/86400.0);
 	}
 	cairo_show_text(cr,label);
+}
+
+static void axis_break(cairo_t *cr, float *x, float y, float t){
+	int gap = 5,
+		skew = 2,
+		height = 20;
+
+	//close any previous paths
+	cairo_stroke(cr);
+
+	timecode(cr,*x-50,y - REVIEW_ROW_HEIGHT/2-0.5,t);
+
+	cairo_set_source_rgba(cr,0.0,0.0,0.0,0.6);
+	cairo_set_dash(cr,NULL,0,0);
+	cairo_set_line_width(cr,1.5);
+
+	cairo_move_to(cr,*x-skew,y+height);
+	cairo_line_to(cr,*x+skew,y-height);
+
+	cairo_move_to(cr,*x+gap-skew,y+height);
+	cairo_line_to(cr,*x+gap+skew,y-height);
+	*x += gap+skew;
+	cairo_stroke(cr);
+
+	data_config(cr);
+
 }
