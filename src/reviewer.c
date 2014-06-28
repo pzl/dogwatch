@@ -178,9 +178,16 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	cairo_stroke(cr);
 
+	cairo_surface_t *surface2 = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,REVIEW_FILE_WIDTH,lastY+REVIEW_ROW_HEIGHT);
+	cairo_t *cr2 = cairo_create(surface2);
+	cairo_set_source_surface(cr2,surface,0,0);
+	cairo_paint(cr2);
+
 	cairo_destroy(cr);
-	cairo_surface_write_to_png(surface, outfile);
+	cairo_destroy(cr2);
+	cairo_surface_write_to_png(surface2, outfile);
 	cairo_surface_destroy(surface);
+	cairo_surface_destroy(surface2);
 	return;
 }
 
