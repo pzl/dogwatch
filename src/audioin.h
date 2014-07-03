@@ -2,7 +2,7 @@
 #define AUDIO_IN_H
 
 #define SAMPLE_RATE 8000
-#define FRAMES_PER_BUFFER   512
+#define FRAMES_PER_PACKET 512
 #define PACKETS_PER_BUFFER 4
 #define CHANNELS 1
 

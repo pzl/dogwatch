@@ -72,7 +72,7 @@ void audio_init(PaStream **pstream, sound *data){
 
 
 
-    data->maxFrameIndex = totalFrames = FRAMES_PER_BUFFER * PACKETS_PER_BUFFER;
+    data->maxFrameIndex = totalFrames = FRAMES_PER_PACKET * PACKETS_PER_BUFFER;
     data->frameIndex = 0;
     data->pstart = 0;
     data->plen = 0;
@@ -135,7 +135,7 @@ void audio_init(PaStream **pstream, sound *data){
                        &inputConfig,
                        NULL, //output config
                        SAMPLE_RATE,
-                       FRAMES_PER_BUFFER,
+                       FRAMES_PER_PACKET,
                        paClipOff,
                        get_audio,
                        data); //pointer to be passed to callback
