@@ -81,9 +81,9 @@ void png_view_create(const char *readfile, const char *outfile){
 	//cooldown/calm amplitude marker
 	cairo_set_source_rgba(cr,0.4,0.8,1.0,0.2);
 	for (i=0; i<max_rows; i++){
-		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 + CALM - SAMPLE_SILENCE + 0.5);
+		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 + BARK_END - SAMPLE_SILENCE + 0.5);
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
-		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 - (CALM - SAMPLE_SILENCE) + 0.5);
+		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 - (BARK_END - SAMPLE_SILENCE) + 0.5);
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
 	cairo_set_dash(cr,thin_dash,1,0);

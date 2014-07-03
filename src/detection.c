@@ -35,7 +35,7 @@ void *detect(void *snd){
 					printf("barked! %s", asctime(timeinfo));
 				}
 			} else {
-				if (abs(data->recorded[data->pstart+i] - SAMPLE_SILENCE) <= CALM - SAMPLE_SILENCE){
+				if (abs(data->recorded[data->pstart+i] - SAMPLE_SILENCE) <= BARK_END - SAMPLE_SILENCE){
 					//count the consecutive quiet frames
 					ms++;
 
