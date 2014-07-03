@@ -3,15 +3,18 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include "audioin.h"
-#include "writer.h"
+#include "file.h"
 
-FILE *init_file(const char *name){
+FILE *create_file(const char *name){
 	FILE *f;
-    f = fopen(name,"wb");
-    if (f == NULL){
+	unsigned char header[6] = { 255, 'D', 'O', 'G', 1, 0 };
+
+	f = fopen(name,"wb");
+	if (f == NULL){
         fprintf(stderr, "Could not open file for writing\n");
         exit(1);
     }
+    fwrite(header, sizeof(unsigned char), 6, f);
     return f;
 }
 

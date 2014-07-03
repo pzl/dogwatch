@@ -5,7 +5,7 @@
 #include <semaphore.h>
 #include <portaudio.h>
 #include "audioin.h"
-#include "writer.h"
+#include "file.h"
 #include "curse.h"
 #include "detection.h"
 #include "reviewer.h"
@@ -58,14 +58,14 @@ int main(int argc, char **argv) {
     (void) argv;
 
     if (argc >= 2 && *argv[1] == 'r'){
-        png_view_create("out/record.raw","waveform.png");
+        png_view_create("out/record.dog","waveform.png");
         return 0;
     }
 
 
     signal(SIGINT, shutdown);
 
-    wargs.fp = init_file("out/record.raw");
+    wargs.fp = create_file("out/record.dog");
     wargs.data = &data;
 
     audio_init(&stream, &data);

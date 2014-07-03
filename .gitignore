@@ -3,6 +3,8 @@
 *.wav
 *.pcm
 *.done
+*.raw
+*.dog
 a.out
 
 out

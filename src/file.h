@@ -9,7 +9,7 @@ typedef struct writer {
 } writer;
 
 
-FILE *init_file(const char *);
+FILE *create_file(const char *);
 void *write_file(void *);
 void close_file(FILE *);
 
