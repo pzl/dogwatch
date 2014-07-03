@@ -18,12 +18,17 @@ FILE *init_file(const char *name){
 void *write_file(void *wargs){
 	writer *args = (writer *)wargs;
 	SAMPLE *packet;
-
+	int start, len;
 
 	while (1){
 		sem_wait(args->data->writer);
-		packet = &(args->data->recorded[args->data->pstart]);
-		fwrite(packet, CHANNELS*sizeof(SAMPLE), args->data->plen, args->fp);
+		//store packet pointers in case they change
+		start = args->data->pstart;
+		len = args->data->plen;
+
+
+		packet = &(args->data->recorded[start]);
+		fwrite(packet, CHANNELS*sizeof(SAMPLE), len, args->fp);
 	}
 
 	return NULL;
