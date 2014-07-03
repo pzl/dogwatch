@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
     (void) argv;
 
     if (argc >= 2 && *argv[1] == 'r'){
-        png_view_create("out/record.raw","hello.png");
+        png_view_create("out/record.raw","waveform.png");
         return 0;
     }
 
