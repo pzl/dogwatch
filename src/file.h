@@ -6,20 +6,21 @@
 #define FILE_HEADER_SIZE 6
 
 
-typedef struct writer {
-	FILE *fp;
-	sound *data;
-} writer;
-
 typedef struct dogfile {
 	FILE *fp;
 	int version;
 	int lossiness;
 } dogfile;
 
-FILE *create_file(const char *);
+typedef struct writer {
+	dogfile df;
+	sound *data;
+} writer;
+
+
+dogfile create_dogfile(const char *);
 dogfile open_dogfile(const char *);
 void *write_file(void *);
-void close_file(FILE *);
+void close_file(dogfile);
 
 #endif

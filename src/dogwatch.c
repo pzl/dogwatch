@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
 
     signal(SIGINT, shutdown);
 
-    wargs.fp = create_file("out/record.dog");
+    wargs.df = create_dogfile("out/record.dog");
     wargs.data = &data;
 
     audio_init(&stream, &data);
@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
     if (pthread_create(&file_writer, NULL, write_file, &wargs)){
         fprintf(stderr, "Error creating file writer\n");
         close();
-        close_file(wargs.fp);
+        close_file(wargs.df);
         exit(1);
     }
 
@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
             fprintf(stderr, "Error creating waveform viewer\n");
             nc_stop();
             close();
-            close_file(wargs.fp);
+            close_file(wargs.df);
             exit(1);
         }
     }
@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Error creating detection thread\n");
         nc_stop();
         close();
-        close_file(wargs.fp);
+        close_file(wargs.df);
         exit(1);
     }
 
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
 
     //nc_stop();
     close();
-    close_file(wargs.fp);
+    close_file(wargs.df);
 
     return 0;
 }

@@ -5,17 +5,17 @@
 #include "audioin.h"
 #include "file.h"
 
-FILE *create_file(const char *name){
-	FILE *f;
+dogfile create_dogfile(const char *name){
+	dogfile d;
 	unsigned char header[FILE_HEADER_SIZE] = { 255, 'D', 'O', 'G', 1, 0 };
 
-	f = fopen(name,"wb");
-	if (f == NULL){
-        fprintf(stderr, "Could not open file for writing\n");
+	d.fp = fopen(name,"wb");
+	if (d.fp == NULL){
+        fprintf(stderr, "Could not open file \"%s\" for writing\n", name);
         exit(1);
     }
-    fwrite(header, sizeof(unsigned char), FILE_HEADER_SIZE, f);
-    return f;
+    fwrite(header, sizeof(unsigned char), FILE_HEADER_SIZE, d.fp);
+    return d;
 }
 
 dogfile open_dogfile(const char *name){
@@ -53,12 +53,12 @@ void *write_file(void *wargs){
 
 
 		packet = &(args->data->recorded[start]);
-		fwrite(packet, CHANNELS*sizeof(SAMPLE), len, args->fp);
+		fwrite(packet, CHANNELS*sizeof(SAMPLE), len, args->df.fp);
 	}
 
 	return NULL;
 }
 
-void close_file(FILE *fp){
-	fclose(fp);
+void close_file(dogfile d){
+	fclose(d.fp);
 }
