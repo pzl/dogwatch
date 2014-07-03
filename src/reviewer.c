@@ -14,7 +14,6 @@ static void axis_break(cairo_t *, float *x, float y, float time);
 
 void png_view_create(const char *readfile, const char *outfile){
 	dogfile d = open_dogfile(readfile);
-	FILE *infile = d.fp;
 	int fd;
 	struct stat st;
 	long long fsize, 
@@ -32,7 +31,7 @@ void png_view_create(const char *readfile, const char *outfile){
 
 
 	//get max filesize
-	fd = fileno(infile);
+	fd = fileno(d.fp);
 	fstat(fd, &st);
 	fsize = st.st_size;
 
@@ -112,7 +111,7 @@ void png_view_create(const char *readfile, const char *outfile){
 	data_config(cr);
 
 
-	while ((rd = fread(buf, CHANNELS * sizeof(SAMPLE), REVIEW_BUFFER_SIZE, infile)) > 0){
+	while ((rd = fread(buf, CHANNELS * sizeof(SAMPLE), REVIEW_BUFFER_SIZE, d.fp)) > 0){
 		if (rd != REVIEW_BUFFER_SIZE){
 			fprintf(stderr, "error reading row %d: wanted %d samples from file, got %d\n", 
 				lastY/REVIEW_ROW_HEIGHT, 
@@ -182,7 +181,7 @@ void png_view_create(const char *readfile, const char *outfile){
 	}
 
 
-	fclose(infile);
+	fclose(d.fp);
 
 	cairo_stroke(cr);
 
