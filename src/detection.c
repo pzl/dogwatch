@@ -58,6 +58,5 @@ void *detect(void *snd){
 }
 
 unsigned int detection_end(void){
-	printf("barked %d times, roughly\n", barks);
 	return barks;
 }

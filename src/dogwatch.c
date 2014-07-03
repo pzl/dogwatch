@@ -23,7 +23,7 @@ static void close(void){
     }
 
     barks = detection_end();
-
+    printf("barked %d times, roughly\n", barks);
 }
 
 static void shutdown(int sig){
