@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 #include "audioin.h"
 #include "detection.h"
+#include "file.h"
 #include "reviewer.h"
 
 static void data_config(cairo_t *);
@@ -12,7 +13,8 @@ static void axis_break(cairo_t *, float *x, float y, float time);
 
 
 void png_view_create(const char *readfile, const char *outfile){
-	FILE *infile = fopen(readfile, "r+b");
+	dogfile d = open_dogfile(readfile);
+	FILE *infile = d.fp;
 	int fd;
 	struct stat st;
 	long long fsize, 
