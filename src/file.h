@@ -5,6 +5,7 @@
 
 #define FILE_HEADER_SIZE 6
 #define COMPRESS_AFTER_TIMES 4
+#define LOSSY_LEVEL 2
 
 
 typedef struct dogfile {

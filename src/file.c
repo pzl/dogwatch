@@ -69,20 +69,25 @@ void *write_file(void *wargs){
 				buf[buflen++] = 1;
 
 				continue;
-			} else if (packet[i] == SAMPLE_SILENCE){
+			} else if (packet[i] >= SAMPLE_SILENCE - LOSSY_LEVEL &&
+			           packet[i] <= SAMPLE_SILENCE + LOSSY_LEVEL){
 				repeat++;
 
 				if (repeat >= COMPRESS_AFTER_TIMES){
 					i+=1; //we already counted the sample we're on 
 
-					while (i < plen && i<255 && packet[i] == SAMPLE_SILENCE){
+					while (i < plen && 
+					       i<255 && 
+					       packet[i] >= SAMPLE_SILENCE - LOSSY_LEVEL &&
+					       packet[i] <= SAMPLE_SILENCE + LOSSY_LEVEL){
 						i++;
 						repeat++;
 					}
 
 					i-=1; //will increment one more on continue
 
-					while (buf[buflen-1] == SAMPLE_SILENCE){
+					while (buf[buflen-1] >= SAMPLE_SILENCE - LOSSY_LEVEL &&
+					       buf[buflen-1] <= SAMPLE_SILENCE + LOSSY_LEVEL){
 						//rewind the buffer
 						buflen--;
 					}
