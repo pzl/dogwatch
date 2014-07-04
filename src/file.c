@@ -50,6 +50,8 @@ void *write_file(void *wargs){
 
 	while (1){
 		sem_wait(args->data->writer);
+
+
 		buflen=0;
 
 		//store packet pointers in case they change
@@ -57,6 +59,8 @@ void *write_file(void *wargs){
 		plen = args->data->plen;
 
 		packet = &(args->data->recorded[start]);
+
+#ifndef COMPRESSION_OFF
 
 		for (i=0; i<plen; i++) {
 
@@ -108,6 +112,9 @@ void *write_file(void *wargs){
 		}
 
 		fwrite(buf, CHANNELS*sizeof(SAMPLE), buflen, args->df.fp);
+#else
+		fwrite(packet, CHANNELS*sizeof(SAMPLE), plen, args->df.fp);
+#endif
 	}
 
 	return NULL;
