@@ -22,7 +22,8 @@ typedef struct writer {
 
 dogfile create_dogfile(const char *);
 dogfile open_dogfile(const char *);
-void *write_file(void *);
+void *file_writer(void *);
+int write_packet(FILE *, SAMPLE *, int packetlen);
 void close_file(dogfile);
 
 #endif

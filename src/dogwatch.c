@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     PaStream *stream;
     sound data;
     writer wargs;
-    pthread_t file_writer, wave_viewer, crude_detector;
+    pthread_t file_write_thread, wave_viewer, crude_detector;
 
     //wunused
     (void) argc;
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 
     audio_init(&stream, &data);
     audio_start(stream);
-    if (pthread_create(&file_writer, NULL, write_file, &wargs)){
+    if (pthread_create(&file_write_thread, NULL, file_writer, &wargs)){
         fprintf(stderr, "Error creating file writer\n");
         close();
         close_file(wargs.df);
