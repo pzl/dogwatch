@@ -56,7 +56,7 @@ Any bytes following the header are interpreted as PCM data, with the exception o
 
 #### Compression
 
-`.dog` format uses a custom compression method to condense large continuous areas of similar byte ranges. Without this compression, long periods of silence (which are typical in this application's use case) would take up a significant portion of file size. This compression method aims to condense those silent periods into very few bytes.
+`.dog` format uses a custom compression method to condense large continuous areas of similar byte ranges. Without this compression, long periods of silence (which are typical in this application's use case) would take up a significant portion of file size. This compression method aims to condense those silent periods into very few bytes. Compression may be lossless or lossy (see below).
 
 When byte `00` is encountered in the data section, it begins a compressed data sequence. This sequence is three bytes long, including the starting `00` byte. An example sequence follows:
 
@@ -79,3 +79,14 @@ could be represented in the `.dog` format as:
 `00` as compression start byte, `81` is the value, repeated `05` times.
 
 Since `00` is a valid PCM data value that was changed to be a compression escape byte, it no longer represents the data value 0 anymore. To represent the value 0, you may use the following sequence: `00 00 01`. That is, `00` for escape, followed by `00` as data value, `01` times.
+
+##### Lossless
+Lossless compression will only condense exact repeating values into the compression sequence starting with `00`. The example above uses lossless compression. There were 5 sequential bytes of `81`, compressed to the sequence `00 81 05` which expands back to read "5 bytes of `81`". No information is lost. 
+
+##### Lossy
+
+Lossy compression is used to further reduce the file size, at the expense of audio quality. Some information will be lost in the process. Lossless compression will help reducing file size for long quiet periods, but for 8-bit unsigned PCM (0-255, center value 128), silence is not always 128 repeating. Depending on microphone gain or background noise, silence might oscillate between 127 and 129 (128 +/- 1). Because of these small changes, there may not be long enough stretches of 128 to cause sufficient compression, but the audio file is still more or less silence. 
+
+What we can do in this case is to compress large section of data that only go from 127 to 129, inclusive, to the value 128, to make a very large continuous section of 128. This is where we lose data. The values 127 and 129 are changed to 128, and we cannot reverse this process. Very quiet audio information is lost into "pure" silence. 
+
+Of course 128 +/- 1 could be changed to be 128 +/- 2, so that values from 126 to 130 are silenced. This will further reduce the file size but also lose much more information. This increasing tradeoff for filesize and information loss is "lossiness". The "lossiness" value corresponds to the number we are adding or subtracting from 128 to silence (e.g. 128 +/- 2 is "lossiness" of 2).
