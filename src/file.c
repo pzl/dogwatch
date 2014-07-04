@@ -5,6 +5,13 @@
 #include "audioin.h"
 #include "file.h"
 
+
+/*
+ * creates new file following DOG file spec, writing basic header to file
+ * 
+ * name: file name, including extension
+ * @return: dogfile object representing new file
+ */
 dogfile create_dogfile(const char *name){
 	dogfile d;
 	unsigned char header[FILE_HEADER_SIZE] = { 255, 'D', 'O', 'G', 1, 0 };
@@ -18,6 +25,13 @@ dogfile create_dogfile(const char *name){
     return d;
 }
 
+
+/*
+ * opens dogfile, parses and validates header. 
+ *
+ * name: file path + name, including extension
+ * @return: dogfile of open file, seeked to data portion
+ */
 dogfile open_dogfile(const char *name){
 	dogfile d;
 	unsigned char header[FILE_HEADER_SIZE];
@@ -46,7 +60,11 @@ dogfile open_dogfile(const char *name){
     return d;
 }
 
-
+/*
+ * file writing thread. Waits on semaphore signal
+ *
+ * param should be writer *
+ */
 void *file_writer(void *wargs){
 	writer *args = (writer *)wargs;
 	SAMPLE *packet;
@@ -61,7 +79,16 @@ void *file_writer(void *wargs){
 	return NULL;
 }
 
-
+/*
+ * writes from SAMPLE * to FILE *, and may compress data according to DOG spec
+ *
+ * FILE *: file to write to
+ * SAMPLE *: buffer to write from
+ * plen: number of bytes from SAMPLE * to read and encode. May not match
+ *			bytes written
+ *
+ * @return: 0 for now (@todo)
+ */
 int write_packet(FILE *fp, SAMPLE *packet, int plen){
 	SAMPLE buf[2*FRAMES_PER_PACKET];
 	int i,
