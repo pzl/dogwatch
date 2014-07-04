@@ -77,7 +77,7 @@ void *write_file(void *wargs){
 					i+=1; //we already counted the sample we're on 
 
 					while (i < plen && 
-					       i<255 && 
+					       repeat<255 && 
 					       packet[i] >= SAMPLE_SILENCE - LOSSY_LEVEL &&
 					       packet[i] <= SAMPLE_SILENCE + LOSSY_LEVEL){
 						i++;
