@@ -43,17 +43,66 @@ dogfile open_dogfile(const char *name){
 void *write_file(void *wargs){
 	writer *args = (writer *)wargs;
 	SAMPLE *packet;
-	int start, len;
+	SAMPLE buf[2*FRAMES_PER_PACKET];
+	int i, start, plen,
+		repeat=0,
+		buflen=0;
 
 	while (1){
 		sem_wait(args->data->writer);
+		buflen=0;
+
 		//store packet pointers in case they change
 		start = args->data->pstart;
-		len = args->data->plen;
-
+		plen = args->data->plen;
 
 		packet = &(args->data->recorded[start]);
-		fwrite(packet, CHANNELS*sizeof(SAMPLE), len, args->df.fp);
+
+		for (i=0; i<plen; i++) {
+
+			//use compression to represent data val 0
+			if (packet[i] == 0 ){
+				repeat=0; //reset continuous silence counter
+
+				buf[buflen++] = 0;
+				buf[buflen++] = 0;
+				buf[buflen++] = 1;
+
+				continue;
+			} else if (packet[i] == SAMPLE_SILENCE){
+				repeat++;
+
+				if (repeat >= COMPRESS_AFTER_TIMES){
+					i+=1; //we already counted the sample we're on 
+
+					while (i < plen && i<255 && packet[i] == SAMPLE_SILENCE){
+						i++;
+						repeat++;
+					}
+
+					i-=1; //will increment one more on continue
+
+					while (buf[buflen-1] == SAMPLE_SILENCE){
+						//rewind the buffer
+						buflen--;
+					}
+
+					//compress escape, value, Nrepeats
+					buf[buflen++] = 0;
+					buf[buflen++] = SAMPLE_SILENCE;
+					buf[buflen++] = repeat;
+
+					repeat=0;
+					continue;
+				}
+			} else {
+				repeat = 0;
+			}
+
+			buf[buflen++] = packet[i];
+		}
+
+		fwrite(buf, CHANNELS*sizeof(SAMPLE), buflen, args->df.fp);
 	}
 
 	return NULL;
