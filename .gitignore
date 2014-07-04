@@ -5,6 +5,7 @@
 *.done
 *.raw
 *.dog
+*.o
 a.out
 
 out
