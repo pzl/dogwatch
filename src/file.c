@@ -154,7 +154,6 @@ int write_packet(FILE *fp, SAMPLE *packet, int plen){
 	return 0;
 }
 
-}
 
 void close_file(dogfile d){
 	fclose(d.fp);
