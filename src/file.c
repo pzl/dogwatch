@@ -21,6 +21,7 @@ dogfile create_dogfile(const char *name){
 dogfile open_dogfile(const char *name){
 	dogfile d;
 	unsigned char header[FILE_HEADER_SIZE];
+	int header_meta_length;
 
 	d.fp = fopen(name,"r+b");
 	if (d.fp == NULL){
@@ -33,7 +34,12 @@ dogfile open_dogfile(const char *name){
     	header[2] == 'O' &&
     	header[3] == 'G' ){
 		d.version = header[4];
-		d.lossiness = header[5];
+		header_meta_length = header[5];
+
+		//consume rest of header
+		fread(NULL, sizeof(unsigned char), header_meta_length, d.fp);
+
+		d.lossiness = 0;
     } else {
     	fprintf(stderr, "error parsing %s: header incorrect.\n", name);
     }

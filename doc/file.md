@@ -13,7 +13,7 @@ The `.dog` file format always starts with a header like the following:
 FF 44 4F 47 01 00
 ```
 
-The first byte is always `FF`, followed by the ASCII bytes that represent the string "DOG" (`44 4F 47`). The next byte `01` indicates the file format version (1 in this case) and the last byte `00` indicates the "lossiness" used in compression. 
+The first byte is always `FF`, followed by the ASCII bytes that represent the string "DOG" (`44 4F 47`). The next byte `01` indicates the file format version (1 in this case) and the last byte `00` indicates the length of the remaining data in this header, after the version specifier. This allows for inclusion of metadata in the future, and possible backwards compatibility.
 
 ### Data
 
