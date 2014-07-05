@@ -80,6 +80,8 @@ could be represented in the `.dog` format as:
 
 Since `00` is a valid PCM data value that was changed to be a compression escape byte, it no longer represents the data value 0 anymore. To represent the value 0, you may use the following sequence: `00 00 01`. That is, `00` for escape, followed by `00` as data value, `01` times.
 
+It is an error to have a compression sequence with `00` as the final byte (number of times to repeat).
+
 ##### Lossless
 Lossless compression will only condense exact repeating values into the compression sequence starting with `00`. The example above uses lossless compression. There were 5 sequential bytes of `81`, compressed to the sequence `00 81 05` which expands back to read "5 bytes of `81`". No information is lost. 
 
