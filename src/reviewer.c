@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <cairo.h>
-#include <sys/stat.h>
 #include "audioin.h"
 #include "detection.h"
 #include "file.h"
@@ -14,10 +13,7 @@ static void axis_break(cairo_t *, float *x, float y, float time);
 
 void png_view_create(const char *readfile, const char *outfile){
 	dogfile d = open_dogfile(readfile);
-	int fd;
-	struct stat st;
-	long long fsize, 
-			  samples_of_silence=0,
+	long long samples_of_silence=0,
 			  samples_seen=0;
 	int i, j, rd,
 		max_rows = 30,
@@ -28,16 +24,11 @@ void png_view_create(const char *readfile, const char *outfile){
 	static const double wide_dash[] = {14.0, 6.0},
 						thin_dash[] = {4.0,8.0};
 
+	/*
+		@todo; get filesize info
+	*/
 
 
-	//get max filesize
-	fd = fileno(d.fp);
-	fstat(fd, &st);
-	fsize = st.st_size;
-
-
-
-	printf("file size: %lld\n", fsize);
 	printf("max rows: %d\n", max_rows);
 
 
@@ -111,13 +102,7 @@ void png_view_create(const char *readfile, const char *outfile){
 	data_config(cr);
 
 
-	while ((rd = fread(buf, CHANNELS * sizeof(SAMPLE), REVIEW_BUFFER_SIZE, d.fp)) > 0){
-		if (rd != REVIEW_BUFFER_SIZE){
-			fprintf(stderr, "error reading row %d: wanted %d samples from file, got %d\n", 
-				lastY/REVIEW_ROW_HEIGHT, 
-				REVIEW_BUFFER_SIZE, 
-				rd);
-		}
+	while ((rd = read_dogfile(&d, buf, REVIEW_BUFFER_SIZE)) > 0){
 
 		//if new row
 		if (posX >= REVIEW_FILE_WIDTH) {
@@ -181,7 +166,7 @@ void png_view_create(const char *readfile, const char *outfile){
 	}
 
 
-	fclose(d.fp);
+	close_file(d);
 
 	cairo_stroke(cr);
 
