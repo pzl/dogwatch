@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
 
     signal(SIGINT, shutdown);
 
-    wargs.df = create_dogfile("out/record.dog");
+    wargs.df = create_dogfile("out/record.dog", DF_COMPRESSED, DF_LOSSLESS);
     wargs.data = &data;
 
     audio_init(&stream, &data);

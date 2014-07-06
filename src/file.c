@@ -23,16 +23,22 @@ filebuf overflow = {
  * name: file name, including extension
  * @return: dogfile object representing new file
  */
-dogfile create_dogfile(const char *name){
+dogfile create_dogfile(const char *name, unsigned char compressed, unsigned char lossy){
 	dogfile d;
-	unsigned char header[FILE_HEADER_SIZE] = { 255, 'D', 'O', 'G', 1, 0 };
-
+	unsigned char header[FILE_HEADER_SIZE] = { 255, 'D', 'O', 'G', 1, 6 },
+				  meta[6] = { 1, 1, compressed, 1, 2, lossy };
 	d.fp = fopen(name,"wb");
 	if (d.fp == NULL){
         fprintf(stderr, "Could not open file \"%s\" for writing\n", name);
         exit(1);
     }
     fwrite(header, sizeof(unsigned char), FILE_HEADER_SIZE, d.fp);
+    fwrite(meta, sizeof(unsigned char), 6, d.fp);
+
+    d.version=1;
+    d.compression=compressed;
+    d.lossiness=lossy;
+
     return d;
 }
 

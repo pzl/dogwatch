@@ -37,7 +37,7 @@ typedef struct filebuf {
 } filebuf;
 
 
-dogfile create_dogfile(const char *);
+dogfile create_dogfile(const char *, unsigned char compression, unsigned char lossiness);
 dogfile open_dogfile(const char *);
 int read_dogfile(dogfile *, SAMPLE *buf, int nsamples);
 void *file_writer(void *);
