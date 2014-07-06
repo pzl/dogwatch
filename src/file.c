@@ -5,6 +5,17 @@
 #include "audioin.h"
 #include "file.h"
 
+static void extend_buf(SAMPLE **, int bytes);
+static int drain_overflow(filebuf *request);
+static int _read(FILE *, filebuf *, int nbytes);
+static int sample_cpy(filebuf *from, filebuf *to, int expand);
+
+
+filebuf overflow = {
+	.index = 0,
+	.len = 0
+};
+
 
 /*
  * creates new file following DOG file spec, writing basic header to file
@@ -154,7 +165,223 @@ int write_packet(FILE *fp, SAMPLE *packet, int plen){
 	return 0;
 }
 
+int read_dogfile(dogfile *d, SAMPLE *reqbuf, int reqbytes){
+	filebuf readin;
+	filebuf requested;
+
+	readin.index=0;
+	readin.len = 0;
+	requested.buf = reqbuf;
+	requested.index=0;
+	requested.len = reqbytes;
+
+
+	int copied=0;
+
+
+	/*
+		If we have buffered bytes available, send those from overflow buf
+		before doing another read
+	*/
+	requested.index = drain_overflow(&requested);
+	if (requested.index == requested.len){
+		//buffer completely filled up the request!
+		return requested.len;
+	}
+	copied = requested.index;
+
+
+	/*
+		Requested bytes not satisfied yet, read remaining bytes
+		from file. May get slightly more or less bytes than
+		asked for. Compressions not expanded yet
+	*/
+	readin.len = _read(d->fp, &readin, requested.len-requested.index);
+
+	/*
+		at this point we should have an a full readin buffer, (possibly overfull)
+		of and an emptied overflow buffer
+
+		copy and expand from readin bytes to provided result buffer
+	*/
+	copied += sample_cpy(&readin, &requested, _FILECPY_EXPAND);
+
+	/*
+	printf("df: requested %d bytes. copied %d bytes. read in %d bytes. readin index: %d, remaining: %d bytes\n",
+	 	requested.len,
+	 	copied,
+	 	readin.len,
+	 	readin.index,
+	 	readin.len - readin.index);
+	*/
+
+
+	//info left to throw into buffer
+	if (readin.len > readin.index){
+		//at least enough for samples as read
+		overflow.len = readin.len - readin.index;
+		overflow.buf = malloc( (overflow.len) * sizeof(SAMPLE));
+		if (overflow.buf == NULL){
+			fprintf(stderr, "Could not allocate mem for overflow read buffer\n");
+			return 0;
+		}
+		//don't expand when holding in mem
+		sample_cpy(&readin, &overflow, _FILECPY_NOEXPAND);
+		overflow.index=0;
+
+	}
+
+	free(readin.buf);
+
+	return copied;
+}
+
+
 
 void close_file(dogfile d){
 	fclose(d.fp);
+}
+
+
+static void extend_buf(SAMPLE **buf, int bytes){
+	SAMPLE *t;
+
+	t = realloc(*buf, bytes);
+	if (t){
+		*buf = t;
+	} else {
+		fprintf(stderr, "Error extending buffer!\n");
+	}
+}
+
+
+static int drain_overflow(filebuf *request){
+	int r=0;
+
+	//make sure there IS a buffer to use
+	if (overflow.index >= overflow.len || overflow.buf == NULL){
+		return 0;
+	}
+
+	//copy while we haven't fulfilled request or until buffer empty
+	r = sample_cpy(&overflow, request, _FILECPY_EXPAND);
+
+	if (overflow.index >= overflow.len){
+		//exhausted overflow buffer, reset it
+		overflow.index=0;
+		overflow.len=0;
+		free(overflow.buf);
+	}
+
+	return r;
+}
+
+static int _read(FILE *fp, filebuf *rbuf, int bytes){
+	SAMPLE *temp;
+	int byt_read;
+
+	/*
+		Allocate space and read from file as normal
+	*/
+	rbuf->buf = malloc( (bytes) * sizeof(SAMPLE));
+	if (rbuf->buf == NULL){
+		fprintf(stderr, "error creating buffer for file reading\n");
+		return 0;
+	}
+
+	//let's read some data!
+	byt_read = fread(rbuf->buf, sizeof(SAMPLE), bytes, fp);
+	if (byt_read == 0){
+		//it wasn't EOF that caused underflow
+		if (!feof(fp)){
+			fprintf(stderr, "Problem reading dogfile!\n");
+		}
+		return 0;
+	}
+
+
+
+	/* 
+		Check if we cut off reading in the middle of a compression sequence,
+		and finish that sequence into read_buf
+	 */
+	if (rbuf->buf[byt_read-1] == 0){
+		//printf("extending read buffer by 2\n");
+		//last byte was 0, need two more
+
+		//extend read_buf by 2b
+		extend_buf(&(rbuf->buf), (bytes+2) * sizeof(SAMPLE));
+
+		//use temp as tiny buf to read the next two bytes
+		temp = malloc(2*sizeof(SAMPLE));
+		fread(temp, sizeof(SAMPLE), 2, fp);
+
+		//copy the two bytes to read_buf
+		rbuf->buf[byt_read++] = temp[0];
+		rbuf->buf[byt_read++] = temp[1];
+
+		free(temp);
+
+	} else if (rbuf->buf[byt_read-2] == 0){
+		//printf("extending read buffer by 1\n");
+		//second to last byte was 0, missing repetition byte of compress seq.
+
+		//extend read_buf by a single byte
+		extend_buf(&(rbuf->buf), (bytes+1) * sizeof(SAMPLE));
+
+		//read the next byte
+		temp = malloc(sizeof(SAMPLE));
+		fread(temp, sizeof(SAMPLE), 1, fp);
+
+		//copy byte to end of read_buf
+		rbuf->buf[byt_read++] = temp[0];
+
+		free(temp);
+	}
+
+	return byt_read;
+}
+
+static int sample_cpy(filebuf *from, filebuf *to, int expand){
+	SAMPLE compress_val;
+	int repeat, //if repeat was SAMPLE, would overflow at 0
+		copied=0;
+
+	//while in both bounds
+	while (from->index < from->len &&
+		   to->index < to->len){
+
+		//if compressed sequence
+		if (expand == _FILECPY_EXPAND && from->buf[from->index] == 0 ){
+			compress_val = from->buf[++(from->index)];
+			repeat = from->buf[++(from->index)];
+
+			while (repeat--){
+				//while room left in destination buffer
+				if (to->index < to->len){
+					to->buf[(to->index)++] = compress_val;
+					copied++;
+				} else {
+					//filled up dest
+					//rewind src buf to reinclude remainder
+					//of compression sequence
+					from->buf[from->index] = ++repeat; //+1 accounts for --
+					from->index -= 2;
+
+					break;
+				}
+			}
+			//emptied compressed sequence, point to next byte
+			if (repeat <= 0){
+				from->index++;
+			}
+
+		} else {
+			//simple copy over
+			to->buf[(to->index)++] = from->buf[(from->index)++];
+			copied++;
+		}
+	}
+
+	return copied;
 }

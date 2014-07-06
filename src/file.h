@@ -7,6 +7,8 @@
 #define COMPRESS_AFTER_TIMES 4
 #define LOSSY_LEVEL 2
 
+#define _FILECPY_EXPAND 1
+#define _FILECPY_NOEXPAND 0
 
 typedef struct dogfile {
 	FILE *fp;
@@ -19,9 +21,16 @@ typedef struct writer {
 	sound *data;
 } writer;
 
+typedef struct filebuf {
+	SAMPLE *buf;
+	int index;
+	int len;
+} filebuf;
+
 
 dogfile create_dogfile(const char *);
 dogfile open_dogfile(const char *);
+int read_dogfile(dogfile *, SAMPLE *buf, int nsamples);
 void *file_writer(void *);
 int write_packet(FILE *, SAMPLE *, int packetlen);
 void close_file(dogfile);
