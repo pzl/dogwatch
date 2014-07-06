@@ -13,6 +13,11 @@
 #define DF_COMPRESSED 1
 #define DF_NOCOMPRESS 0
 
+#define DF_LOSSLESS 0
+#define DF_L_LOSSY 1
+#define DF_M_LOSSY 2
+#define DF_H_LOSSY 3
+
 typedef struct dogfile {
 	FILE *fp;
 	unsigned char version;
