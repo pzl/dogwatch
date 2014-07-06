@@ -5,15 +5,19 @@
 
 #define FILE_HEADER_SIZE 6
 #define COMPRESS_AFTER_TIMES 4
-#define LOSSY_LEVEL 2
+#define LOSSY_LEVEL 0
 
 #define _FILECPY_EXPAND 1
 #define _FILECPY_NOEXPAND 0
 
+#define DF_COMPRESSED 1
+#define DF_NOCOMPRESS 0
+
 typedef struct dogfile {
 	FILE *fp;
-	int version;
-	int lossiness;
+	unsigned char version;
+	unsigned char lossiness;
+	unsigned char compression;
 } dogfile;
 
 typedef struct writer {

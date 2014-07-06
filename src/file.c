@@ -45,26 +45,43 @@ dogfile create_dogfile(const char *name){
  */
 dogfile open_dogfile(const char *name){
 	dogfile d;
-	unsigned char header[FILE_HEADER_SIZE];
-	int header_meta_length;
+	unsigned char headerID[FILE_HEADER_SIZE];
+	unsigned char *metaheader;
+	unsigned char dsize, key;
+	int header_meta_length, i;
 
 	d.fp = fopen(name,"r+b");
 	if (d.fp == NULL){
         fprintf(stderr, "Could not open file for writing\n");
         exit(1);
     }
-    fread(header, sizeof(unsigned char), FILE_HEADER_SIZE, d.fp);
-    if (header[0] == 255 && 
-    	header[1] == 'D' &&
-    	header[2] == 'O' &&
-    	header[3] == 'G' ){
-		d.version = header[4];
-		header_meta_length = header[5];
+    fread(headerID, sizeof(unsigned char), FILE_HEADER_SIZE, d.fp);
 
-		//consume rest of header
-		fread(NULL, sizeof(unsigned char), header_meta_length, d.fp);
+    //validate ID header
+    if (headerID[0] == 255 && 
+    	headerID[1] == 'D' &&
+    	headerID[2] == 'O' &&
+    	headerID[3] == 'G' ){
+		d.version = headerID[4];
 
-		d.lossiness = 0;
+		//meta info defaults
+		d.compression = DF_COMPRESSED;
+
+		//parse Meta header
+		header_meta_length = headerID[5];
+		metaheader = malloc(header_meta_length * sizeof(unsigned char));
+		fread(metaheader, sizeof(unsigned char), header_meta_length, d.fp);
+		for (i=0; i<header_meta_length; i++){
+			dsize=metaheader[i++];
+			key=metaheader[i++];
+
+			if (key == 1){
+				d.compression = metaheader[i++];
+			}
+		}
+
+		free(metaheader);
+
     } else {
     	fprintf(stderr, "error parsing %s: header incorrect.\n", name);
     }
