@@ -66,6 +66,7 @@ dogfile open_dogfile(const char *name){
 
 		//meta info defaults
 		d.compression = DF_COMPRESSED;
+		d.lossiness = DF_LOSSLESS;
 
 		//parse Meta header
 		header_meta_length = headerID[5];
@@ -75,8 +76,14 @@ dogfile open_dogfile(const char *name){
 			dsize=metaheader[i++];
 			key=metaheader[i++];
 
+			/*
+				@todo: not doing anything with dsize yet
+			*/
+
 			if (key == 1){
-				d.compression = metaheader[i++];
+				d.compression = metaheader[i];
+			} else if (key == 2){
+				d.lossiness = metaheader[i];
 			}
 		}
 
