@@ -6,7 +6,7 @@
 #include "file.h"
 
 static void extend_buf(SAMPLE **, int bytes);
-static int drain_overflow(filebuf *request);
+static int drain_overflow(filebuf *request, int expand);
 static int _read(FILE *, filebuf *, int nbytes);
 static int sample_cpy(filebuf *from, filebuf *to, int expand);
 
@@ -201,7 +201,11 @@ int read_dogfile(dogfile *d, SAMPLE *reqbuf, int reqbytes){
 		If we have buffered bytes available, send those from overflow buf
 		before doing another read
 	*/
-	requested.index = drain_overflow(&requested);
+	if (d->compression == DF_COMPRESSED){
+		requested.index = drain_overflow(&requested, _FILECPY_EXPAND);
+	} else {
+		requested.index = drain_overflow(&requested, _FILECPY_NOEXPAND);
+	}
 	if (requested.index == requested.len){
 		//buffer completely filled up the request!
 		return requested.len;
@@ -222,7 +226,12 @@ int read_dogfile(dogfile *d, SAMPLE *reqbuf, int reqbytes){
 
 		copy and expand from readin bytes to provided result buffer
 	*/
-	copied += sample_cpy(&readin, &requested, _FILECPY_EXPAND);
+	if (d->compression == DF_COMPRESSED){
+		copied += sample_cpy(&readin, &requested, _FILECPY_EXPAND);
+	} else {
+		//uncompressed file, don't perform expansion
+		copied += sample_cpy(&readin, &requested, _FILECPY_NOEXPAND);
+	}
 
 	/*
 	printf("df: requested %d bytes. copied %d bytes. read in %d bytes. readin index: %d, remaining: %d bytes\n",
@@ -273,7 +282,7 @@ static void extend_buf(SAMPLE **buf, int bytes){
 }
 
 
-static int drain_overflow(filebuf *request){
+static int drain_overflow(filebuf *request, int expand){
 	int r=0;
 
 	//make sure there IS a buffer to use
@@ -282,7 +291,7 @@ static int drain_overflow(filebuf *request){
 	}
 
 	//copy while we haven't fulfilled request or until buffer empty
-	r = sample_cpy(&overflow, request, _FILECPY_EXPAND);
+	r = sample_cpy(&overflow, request, expand);
 
 	if (overflow.index >= overflow.len){
 		//exhausted overflow buffer, reset it
