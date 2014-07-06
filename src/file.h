@@ -41,7 +41,7 @@ dogfile create_dogfile(const char *);
 dogfile open_dogfile(const char *);
 int read_dogfile(dogfile *, SAMPLE *buf, int nsamples);
 void *file_writer(void *);
-int write_packet(FILE *, SAMPLE *, int packetlen);
+int write_packet(dogfile *, SAMPLE *, int packetlen);
 void close_file(dogfile);
 
 #endif
