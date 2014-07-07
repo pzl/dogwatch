@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <cairo.h>
+#include <time.h>
 #include "audioin.h"
 #include "detection.h"
 #include "file.h"
@@ -13,7 +14,7 @@ static void meta_row(cairo_t *, const char *, dogfile);
 
 
 void png_view_create(const char *readfile, const char *outfile){
-	dogfile d = open_dogfile(readfile);
+	dogfile d;
 	long long samples_of_silence=0,
 			  samples_seen=0;
 	int i, j, rd,
@@ -24,6 +25,13 @@ void png_view_create(const char *readfile, const char *outfile){
 	SAMPLE buf[REVIEW_BUFFER_SIZE];
 	static const double wide_dash[] = {14.0, 6.0},
 						thin_dash[] = {4.0,8.0};
+
+
+	d = open_dogfile(readfile);
+	if (d.fp == NULL){
+		fprintf(stderr, "error reading file\n");
+		return;
+	}
 
 	/*
 		@todo; get filesize info
@@ -245,8 +253,11 @@ static void axis_break(cairo_t *cr, float *x, float y, float t){
 
 static void meta_row(cairo_t *cr, const char *filename, dogfile d){
 	//cairo_text_extents_t ext;
+	const char *dfmt = "%a, %b %e, %Y %r";
 	char cmp_label[15],
-		lossy_label[13];
+		lossy_label[13],
+		date_label[30];
+
 
 	//line separator
 	cairo_set_source_rgba(cr,0.3,0.3,0.3,0.1);
@@ -261,6 +272,14 @@ static void meta_row(cairo_t *cr, const char *filename, dogfile d){
 	cairo_move_to(cr,5,13.5);
 	//cairo_text_extents(cr, filename, &ext);
 	cairo_show_text(cr,filename);
+
+	if (d.date){
+		struct tm *tm_dt;
+		tm_dt = localtime(&d.date);
+		cairo_rel_move_to(cr,20,0);
+		strftime(date_label, 30, dfmt, tm_dt);
+		cairo_show_text(cr,date_label);
+	}
 
 	//add spacing after name
 	//cairo_rel_move_to(cr,ext.x_advance + 45,0);
