@@ -9,6 +9,7 @@ static void data_config(cairo_t *);
 static void label_config(cairo_t *);
 static void timecode(cairo_t *, float x, float y, float time);
 static void axis_break(cairo_t *, float *x, float y, float time);
+static void meta_row(cairo_t *, const char *, dogfile);
 
 
 void png_view_create(const char *readfile, const char *outfile){
@@ -93,12 +94,9 @@ void png_view_create(const char *readfile, const char *outfile){
 	cairo_stroke(cr);
 
 
-	//meta row line
-	cairo_set_source_rgba(cr,0.3,0.3,0.3,0.1);
-	cairo_move_to(cr,0,META_ROW_HEIGHT+0.5);
-	cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
-	cairo_set_dash(cr,NULL,0,0);
-	cairo_stroke(cr);
+	//file meta information, top row
+	meta_row(cr, readfile, d);
+
 
 
 	//make actual data
@@ -242,5 +240,44 @@ static void axis_break(cairo_t *cr, float *x, float y, float t){
 	cairo_stroke(cr);
 
 	data_config(cr);
+
+}
+
+static void meta_row(cairo_t *cr, const char *filename, dogfile d){
+	//cairo_text_extents_t ext;
+	char cmp_label[15],
+		lossy_label[13];
+
+	//line separator
+	cairo_set_source_rgba(cr,0.3,0.3,0.3,0.1);
+	cairo_move_to(cr,0,META_ROW_HEIGHT+0.5);
+	cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
+	cairo_set_dash(cr,NULL,0,0);
+	cairo_stroke(cr);
+
+
+	//filename
+	label_config(cr);
+	cairo_move_to(cr,5,13.5);
+	//cairo_text_extents(cr, filename, &ext);
+	cairo_show_text(cr,filename);
+
+	//add spacing after name
+	//cairo_rel_move_to(cr,ext.x_advance + 45,0);
+	cairo_rel_move_to(cr,75,0);
+	
+	//file compression
+	sprintf(cmp_label, "Compression: %d", d.compression);
+	//cairo_text_extents(cr,cmp_label,&ext);
+	cairo_show_text(cr,cmp_label);
+
+	//cairo_rel_move_to(cr,ext.x_advance+10,0);
+	cairo_rel_move_to(cr,25,0);
+
+
+	//lossiness
+	sprintf(lossy_label, "Lossiness: %d", d.lossiness);
+	//cairo_text_extents(cr,lossy_label,&ext);
+	cairo_show_text(cr,lossy_label);
 
 }
