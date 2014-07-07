@@ -7,7 +7,7 @@
 
 static void extend_buf(SAMPLE **, int bytes);
 static int drain_overflow(filebuf *request, int expand);
-static int _read(FILE *, filebuf *, int nbytes);
+static int _read(FILE *, filebuf *, int nbytes, int extend);
 static int sample_cpy(filebuf *from, filebuf *to, int expand);
 
 
@@ -196,6 +196,15 @@ int write_packet(dogfile *d, SAMPLE *packet, int plen){
 	return 0;
 }
 
+
+/*
+ * Reads some samples from a file
+ *
+ * dogfile: an opened dogfile instance
+ * reqbuf: buffer to hold samples. Must already be alloc'd
+ * reqbytes: number of samples to copy into buffer
+ * @return: number of samples copied (can be underflow or 0 at EOF) 
+ */
 int read_dogfile(dogfile *d, SAMPLE *reqbuf, int reqbytes){
 	filebuf readin;
 	filebuf requested;
@@ -231,7 +240,11 @@ int read_dogfile(dogfile *d, SAMPLE *reqbuf, int reqbytes){
 		from file. May get slightly more or less bytes than
 		asked for. Compressions not expanded yet
 	*/
-	readin.len = _read(d->fp, &readin, requested.len-requested.index);
+	if (d->compression == DF_COMPRESSED){
+		readin.len = _read(d->fp, &readin, requested.len-requested.index, _FILECPY_EXPAND);
+	} else {
+		readin.len = _read(d->fp, &readin, requested.len-requested.index, _FILECPY_NOEXPAND);
+	}
 
 	/*
 		at this point we should have an a full readin buffer, (possibly overfull)
@@ -283,6 +296,10 @@ void close_file(dogfile d){
 }
 
 
+/* -------------------------------------
+		INTERNAL / STATIC HELPERS
+ --------------------------------------- */
+
 static void extend_buf(SAMPLE **buf, int bytes){
 	SAMPLE *t;
 
@@ -316,7 +333,7 @@ static int drain_overflow(filebuf *request, int expand){
 	return r;
 }
 
-static int _read(FILE *fp, filebuf *rbuf, int bytes){
+static int _read(FILE *fp, filebuf *rbuf, int bytes, int extend){
 	SAMPLE *temp;
 	int byt_read;
 
@@ -342,41 +359,44 @@ static int _read(FILE *fp, filebuf *rbuf, int bytes){
 
 
 	/* 
+		If compression is enabled (extend):
 		Check if we cut off reading in the middle of a compression sequence,
 		and finish that sequence into read_buf
 	 */
-	if (rbuf->buf[byt_read-1] == 0){
-		//printf("extending read buffer by 2\n");
-		//last byte was 0, need two more
+	if (extend == _FILECPY_EXPAND){
+		if (rbuf->buf[byt_read-1] == 0){
+			//printf("extending read buffer by 2\n");
+			//last byte was 0, need two more
 
-		//extend read_buf by 2b
-		extend_buf(&(rbuf->buf), (bytes+2) * sizeof(SAMPLE));
+			//extend read_buf by 2b
+			extend_buf(&(rbuf->buf), (bytes+2) * sizeof(SAMPLE));
 
-		//use temp as tiny buf to read the next two bytes
-		temp = malloc(2*sizeof(SAMPLE));
-		fread(temp, sizeof(SAMPLE), 2, fp);
+			//use temp as tiny buf to read the next two bytes
+			temp = malloc(2*sizeof(SAMPLE));
+			fread(temp, sizeof(SAMPLE), 2, fp);
 
-		//copy the two bytes to read_buf
-		rbuf->buf[byt_read++] = temp[0];
-		rbuf->buf[byt_read++] = temp[1];
+			//copy the two bytes to read_buf
+			rbuf->buf[byt_read++] = temp[0];
+			rbuf->buf[byt_read++] = temp[1];
 
-		free(temp);
+			free(temp);
 
-	} else if (rbuf->buf[byt_read-2] == 0){
-		//printf("extending read buffer by 1\n");
-		//second to last byte was 0, missing repetition byte of compress seq.
+		} else if (rbuf->buf[byt_read-2] == 0){
+			//printf("extending read buffer by 1\n");
+			//second to last byte was 0, missing repetition byte of compress seq.
 
-		//extend read_buf by a single byte
-		extend_buf(&(rbuf->buf), (bytes+1) * sizeof(SAMPLE));
+			//extend read_buf by a single byte
+			extend_buf(&(rbuf->buf), (bytes+1) * sizeof(SAMPLE));
 
-		//read the next byte
-		temp = malloc(sizeof(SAMPLE));
-		fread(temp, sizeof(SAMPLE), 1, fp);
+			//read the next byte
+			temp = malloc(sizeof(SAMPLE));
+			fread(temp, sizeof(SAMPLE), 1, fp);
 
-		//copy byte to end of read_buf
-		rbuf->buf[byt_read++] = temp[0];
+			//copy byte to end of read_buf
+			rbuf->buf[byt_read++] = temp[0];
 
-		free(temp);
+			free(temp);
+		}
 	}
 
 	return byt_read;
