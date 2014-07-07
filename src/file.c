@@ -109,6 +109,7 @@ dogfile open_dogfile(const char *name){
 		//meta info defaults
 		d.compression = DF_COMPRESSED;
 		d.lossiness = DF_LOSSLESS;
+		d.date = 0;
 
 		//parse Meta header
 		header_meta_length = headerID[5];
@@ -126,6 +127,19 @@ dogfile open_dogfile(const char *name){
 				d.compression = metaheader[i];
 			} else if (key == 2){
 				d.lossiness = metaheader[i];
+			} else if (key == 3){
+				char tstr[dsize+1];
+				struct tm gmt;
+				time_t ftime;
+
+				//read in timestring
+				memcpy(tstr, metaheader+i, dsize);
+				tstr[dsize] = '\0';
+
+				//convert to time_t
+				strptime(tstr, _DF_TIME_FMT, &gmt);
+				ftime = mktime(&gmt);
+				d.date = ftime;
 			}
 		}
 

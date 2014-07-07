@@ -10,6 +10,7 @@ CFLAGS += -Wstrict-prototypes -Wwrite-strings -ftrapv
 CFLAGS += -pthread
 #CFLAGS += $(shell pkg-config --cflags portaudio-2.0 ncurses)
 CFLAGS += $(shell pkg-config --cflags cairo)
+CFLAGS += -D_XOPEN_SOURCE
 SFLAGS = -std=c99 -pedantic
 SRCDIR = src
 OBJDIR = out
