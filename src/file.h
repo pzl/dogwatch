@@ -2,6 +2,10 @@
 #define WRITER_H
 
 #include "audioin.h"
+#include <time.h>
+
+#define _DF_TIME_FMT "%Y-%m-%d %H:%M:%S"
+#define _DF_TFMT_LEN 20
 
 #define FILE_HEADER_SIZE 6
 #define COMPRESS_AFTER_TIMES 4
@@ -22,6 +26,7 @@ typedef struct dogfile {
 	unsigned char version;
 	unsigned char lossiness;
 	unsigned char compression;
+	time_t date;
 } dogfile;
 
 typedef struct writer {

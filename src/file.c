@@ -29,7 +29,7 @@ dogfile create_dogfile(const char *name, unsigned char compressed, unsigned char
 	dogfile d;
 	unsigned char header[FILE_HEADER_SIZE] = { 255, 'D', 'O', 'G', 1, 0 };
 	unsigned char *meta;
-	char timestr[20]; //@todo, auto-calc this length?
+	char timestr[_DF_TFMT_LEN];
 	time_t now;
 	struct tm *gmt;
 	int slen;
@@ -44,7 +44,7 @@ dogfile create_dogfile(const char *name, unsigned char compressed, unsigned char
     //get current time as string
     now = time(0);
     gmt = gmtime(&now);
-    strftime(timestr, 20, "%Y-%m-%d %H:%M:%S", gmt);
+    strftime(timestr, _DF_TFMT_LEN, _DF_TIME_FMT, gmt);
     slen = strlen(timestr);
 
     //put meta header length into ID portion and write pre-header
@@ -71,6 +71,7 @@ dogfile create_dogfile(const char *name, unsigned char compressed, unsigned char
     d.version=1;
     d.compression=compressed;
     d.lossiness=lossy;
+    d.date = now;
 
     free(meta);
 
