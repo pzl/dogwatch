@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <time.h>
 #include "audioin.h"
 #include "file.h"
 
@@ -25,19 +27,52 @@ filebuf overflow = {
  */
 dogfile create_dogfile(const char *name, unsigned char compressed, unsigned char lossy){
 	dogfile d;
-	unsigned char header[FILE_HEADER_SIZE] = { 255, 'D', 'O', 'G', 1, 6 },
-				  meta[6] = { 1, 1, compressed, 1, 2, lossy };
+	unsigned char header[FILE_HEADER_SIZE] = { 255, 'D', 'O', 'G', 1, 0 };
+	unsigned char *meta;
+	char timestr[20]; //@todo, auto-calc this length?
+	time_t now;
+	struct tm *gmt;
+	int slen;
+
+
 	d.fp = fopen(name,"wb");
 	if (d.fp == NULL){
         fprintf(stderr, "Could not open file \"%s\" for writing\n", name);
         exit(1);
     }
+
+    //get current time as string
+    now = time(0);
+    gmt = gmtime(&now);
+    strftime(timestr, 20, "%Y-%m-%d %H:%M:%S", gmt);
+    slen = strlen(timestr);
+
+    //put meta header length into ID portion and write pre-header
+    header[FILE_HEADER_SIZE-1] = 6+2+slen;
     fwrite(header, sizeof(unsigned char), FILE_HEADER_SIZE, d.fp);
-    fwrite(meta, sizeof(unsigned char), 6, d.fp);
+
+    //create meta header
+    meta = malloc( 8 * sizeof(unsigned char));
+    meta[0] = 1;
+    meta[1] = 1;
+    meta[2] = compressed;
+
+    meta[3] = 1;
+    meta[4] = 2;
+    meta[5] = lossy;
+
+    meta[6] = slen;
+    meta[7] = 3;
+    fwrite(meta, sizeof(unsigned char), 8, d.fp);
+
+    //now write time
+    fwrite(timestr, sizeof(char), slen, d.fp);
 
     d.version=1;
     d.compression=compressed;
     d.lossiness=lossy;
+
+    free(meta);
 
     return d;
 }
