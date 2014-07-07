@@ -5,7 +5,6 @@
 
 #define FILE_HEADER_SIZE 6
 #define COMPRESS_AFTER_TIMES 4
-#define LOSSY_LEVEL 0
 
 #define _FILECPY_EXPAND 1
 #define _FILECPY_NOEXPAND 0

@@ -149,8 +149,8 @@ int write_packet(dogfile *d, SAMPLE *packet, int plen){
 				buf[buflen++] = 1;
 
 				continue;
-			} else if (packet[i] >= SAMPLE_SILENCE - LOSSY_LEVEL &&
-			           packet[i] <= SAMPLE_SILENCE + LOSSY_LEVEL){
+			} else if (packet[i] >= SAMPLE_SILENCE - d->lossiness &&
+			           packet[i] <= SAMPLE_SILENCE + d->lossiness){
 				repeat++;
 
 				if (repeat >= COMPRESS_AFTER_TIMES){
@@ -158,16 +158,16 @@ int write_packet(dogfile *d, SAMPLE *packet, int plen){
 
 					while (i < plen && 
 					       repeat<255 && 
-					       packet[i] >= SAMPLE_SILENCE - LOSSY_LEVEL &&
-					       packet[i] <= SAMPLE_SILENCE + LOSSY_LEVEL){
+					       packet[i] >= SAMPLE_SILENCE - d->lossiness &&
+					       packet[i] <= SAMPLE_SILENCE + d->lossiness){
 						i++;
 						repeat++;
 					}
 
 					i-=1; //will increment one more on continue
 
-					while (buf[buflen-1] >= SAMPLE_SILENCE - LOSSY_LEVEL &&
-					       buf[buflen-1] <= SAMPLE_SILENCE + LOSSY_LEVEL){
+					while (buf[buflen-1] >= SAMPLE_SILENCE - d->lossiness &&
+					       buf[buflen-1] <= SAMPLE_SILENCE + d->lossiness){
 						//rewind the buffer
 						buflen--;
 					}
