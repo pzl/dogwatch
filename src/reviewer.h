@@ -10,7 +10,7 @@
 #define META_ROW_HEIGHT 20
 
 #define NOISE_OF_INTEREST_LEVEL 140
-#define SEC_OF_QUIET_TILL_SKIP	1
+#define SEC_OF_QUIET_TILL_SKIP	0.3
 
 void png_view_create(const char *audiofile, const char *pngfile);
 
