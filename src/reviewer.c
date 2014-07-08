@@ -9,6 +9,7 @@
 static float scale(float y);
 static float midline(int row);
 static float bottom(int row);
+static float crisp(float val);
 static void data_config(cairo_t *);
 static void label_config(cairo_t *);
 static void timecode(cairo_t *, float x, float y, float time);
@@ -56,7 +57,7 @@ void png_view_create(const char *readfile, const char *outfile){
 	cairo_set_source_rgba(cr,0.3,0.3,0.3,0.6);
 	cairo_set_line_width(cr,1);
 	for (i=0; i<max_rows; i++){
-		cairo_move_to(cr,0, midline(i) + 0.5);
+		cairo_move_to(cr,0, crisp(midline(i)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
 	cairo_stroke(cr);
@@ -64,7 +65,7 @@ void png_view_create(const char *readfile, const char *outfile){
 	//extent/limit lines between rows
 	cairo_set_source_rgba(cr,0.0,0.0,0.0,0.4);
 	for (i=0; i<max_rows; i++){
-		cairo_move_to(cr,0,bottom(i)+0.5);
+		cairo_move_to(cr,0, crisp(bottom(i)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
 	cairo_set_dash(cr,wide_dash,1,0);
@@ -73,9 +74,9 @@ void png_view_create(const char *readfile, const char *outfile){
 	//detector amplitude marker
 	cairo_set_source_rgba(cr,1.0,0.4,0.4,0.4);
 	for (i=0; i<max_rows; i++){
-		cairo_move_to(cr,0,bottom(i) - scale(BARK_THRESHOLD) + 0.5);
+		cairo_move_to(cr,0, crisp(bottom(i) - scale(BARK_THRESHOLD)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
-		cairo_move_to(cr,0,midline(i) + scale(BARK_THRESHOLD - SAMPLE_SILENCE) + 0.5);
+		cairo_move_to(cr,0, crisp(midline(i) + scale(BARK_THRESHOLD - SAMPLE_SILENCE)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
 	cairo_set_dash(cr,thin_dash,1,0);
@@ -84,9 +85,9 @@ void png_view_create(const char *readfile, const char *outfile){
 	//cooldown/calm amplitude marker
 	cairo_set_source_rgba(cr,0.4,0.8,1.0,0.2);
 	for (i=0; i<max_rows; i++){
-		cairo_move_to(cr,0,bottom(i) - scale(BARK_END) + 0.5);
+		cairo_move_to(cr,0, crisp(bottom(i) - scale(BARK_END)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
-		cairo_move_to(cr,0,midline(i) + scale(BARK_END - SAMPLE_SILENCE) + 0.5);
+		cairo_move_to(cr,0, crisp(midline(i) + scale(BARK_END - SAMPLE_SILENCE)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
 	cairo_set_dash(cr,thin_dash,1,0);
@@ -95,9 +96,9 @@ void png_view_create(const char *readfile, const char *outfile){
 	//uninteresting noise level
 	cairo_set_source_rgba(cr,0.4,0.8,0.4,0.2);
 	for (i=0; i<max_rows; i++){
-		cairo_move_to(cr,0,bottom(i) - scale(NOISE_OF_INTEREST_LEVEL) + 0.5);
+		cairo_move_to(cr,0, crisp(bottom(i) - scale(NOISE_OF_INTEREST_LEVEL)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
-		cairo_move_to(cr,0,midline(i) + scale(NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE) + 0.5);
+		cairo_move_to(cr,0, crisp(midline(i) + scale(NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
 	cairo_set_dash(cr,thin_dash,1,0);
@@ -113,7 +114,7 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	//first row setup
 	timecode(cr,5,META_ROW_HEIGHT,0);
-	cairo_move_to(cr,0,midline(0)+0.5);
+	cairo_move_to(cr,0,crisp(midline(0)));
 	data_config(cr);
 
 	lastY = META_ROW_HEIGHT;
@@ -130,7 +131,7 @@ void png_view_create(const char *readfile, const char *outfile){
 						(lastY/REVIEW_ROW_HEIGHT * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL)
 						/(SAMPLE_RATE*1.0));
 			*/
-			cairo_move_to(cr,0,midline(lastY/REVIEW_ROW_HEIGHT)+0.5);
+			cairo_move_to(cr,0,crisp(midline(lastY/REVIEW_ROW_HEIGHT)));
 			data_config(cr);
 
 			if (bottom(lastY/REVIEW_ROW_HEIGHT + 1) > bottom(max_rows-1) ){
@@ -153,7 +154,7 @@ void png_view_create(const char *readfile, const char *outfile){
 								samples_seen)
 								/(SAMPLE_RATE*1.0) );
 					data_config(cr);
-					cairo_move_to(cr,posX, bottom(lastY/REVIEW_ROW_HEIGHT) - scale(buf[j]) + 0.5);
+					cairo_move_to(cr,posX, bottom(lastY/REVIEW_ROW_HEIGHT) - scale(buf[j]));
 					posX += 1/(SAMPLES_PER_PIXEL*1.0);
 				} else {
 					//still quiet, move on to next sample
@@ -175,7 +176,7 @@ void png_view_create(const char *readfile, const char *outfile){
 									samples_seen)
 								/(SAMPLE_RATE*1.0));
 				} else {
-					cairo_line_to(cr,posX, bottom(lastY/REVIEW_ROW_HEIGHT) - scale(buf[j]) + 0.5);
+					cairo_line_to(cr,posX, bottom(lastY/REVIEW_ROW_HEIGHT) - scale(buf[j]));
 					posX += 1/(SAMPLES_PER_PIXEL*1.0);
 				}
 			}
@@ -215,6 +216,12 @@ static float midline(int row){
 
 static float bottom(int row){
 	return (row+1)*REVIEW_ROW_HEIGHT + META_ROW_HEIGHT;
+}
+
+static float crisp(float val){
+	int v;
+	v = (int) val;
+	return v + 0.5;
 }
 
 static void data_config(cairo_t *cr){
@@ -282,7 +289,7 @@ static void meta_row(cairo_t *cr, const char *filename, dogfile d){
 
 	//line separator
 	cairo_set_source_rgba(cr,0.3,0.3,0.3,0.1);
-	cairo_move_to(cr,0,META_ROW_HEIGHT+0.5);
+	cairo_move_to(cr,0,crisp(META_ROW_HEIGHT));
 	cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	cairo_set_dash(cr,NULL,0,0);
 	cairo_stroke(cr);
