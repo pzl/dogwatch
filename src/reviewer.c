@@ -6,6 +6,7 @@
 #include "file.h"
 #include "reviewer.h"
 
+static float midline(int row);
 static void data_config(cairo_t *);
 static void label_config(cairo_t *);
 static void timecode(cairo_t *, float x, float y, float time);
@@ -53,7 +54,7 @@ void png_view_create(const char *readfile, const char *outfile){
 	cairo_set_source_rgba(cr,0.3,0.3,0.3,0.6);
 	cairo_set_line_width(cr,1);
 	for (i=0; i<max_rows; i++){
-		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2+0.5 + META_ROW_HEIGHT);
+		cairo_move_to(cr,0, midline(i) + 0.5);
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
 	cairo_stroke(cr);
@@ -71,9 +72,9 @@ void png_view_create(const char *readfile, const char *outfile){
 	//detector amplitude marker
 	cairo_set_source_rgba(cr,1.0,0.4,0.4,0.4);
 	for (i=0; i<max_rows; i++){
-		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 + BARK_THRESHOLD - SAMPLE_SILENCE + 0.5 + META_ROW_HEIGHT);
+		cairo_move_to(cr,0,midline(i) + BARK_THRESHOLD - SAMPLE_SILENCE + 0.5);
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
-		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 - (BARK_THRESHOLD - SAMPLE_SILENCE) + 0.5 + META_ROW_HEIGHT);
+		cairo_move_to(cr,0, midline(i) - (BARK_THRESHOLD - SAMPLE_SILENCE) + 0.5);
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
 	cairo_set_dash(cr,thin_dash,1,0);
@@ -82,9 +83,9 @@ void png_view_create(const char *readfile, const char *outfile){
 	//cooldown/calm amplitude marker
 	cairo_set_source_rgba(cr,0.4,0.8,1.0,0.2);
 	for (i=0; i<max_rows; i++){
-		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 + BARK_END - SAMPLE_SILENCE + 0.5 + META_ROW_HEIGHT);
+		cairo_move_to(cr,0,midline(i) + BARK_END - SAMPLE_SILENCE + 0.5);
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
-		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 - (BARK_END - SAMPLE_SILENCE) + 0.5 + META_ROW_HEIGHT);
+		cairo_move_to(cr,0,midline(i) - (BARK_END - SAMPLE_SILENCE) + 0.5);
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
 	cairo_set_dash(cr,thin_dash,1,0);
@@ -93,9 +94,9 @@ void png_view_create(const char *readfile, const char *outfile){
 	//uninteresting noise level
 	cairo_set_source_rgba(cr,0.4,0.8,0.4,0.2);
 	for (i=0; i<max_rows; i++){
-		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 + NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE + 0.5 + META_ROW_HEIGHT);
+		cairo_move_to(cr,0,midline(i) + NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE + 0.5);
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
-		cairo_move_to(cr,0,i*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 - (NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE) + 0.5 + META_ROW_HEIGHT);
+		cairo_move_to(cr,0,midline(i) - (NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE) + 0.5);
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
 	cairo_set_dash(cr,thin_dash,1,0);
@@ -111,7 +112,7 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	//first row setup
 	timecode(cr,5,META_ROW_HEIGHT,0);
-	cairo_move_to(cr,0,REVIEW_ROW_HEIGHT/2+0.5 + META_ROW_HEIGHT);
+	cairo_move_to(cr,0,midline(0)+0.5);
 	data_config(cr);
 
 	lastY = META_ROW_HEIGHT;
@@ -194,6 +195,11 @@ void png_view_create(const char *readfile, const char *outfile){
 	cairo_surface_destroy(surface);
 	cairo_surface_destroy(surface2);
 	return;
+}
+
+
+static float midline(int row){
+	return row*REVIEW_ROW_HEIGHT + REVIEW_ROW_HEIGHT/2 + META_ROW_HEIGHT;
 }
 
 static void data_config(cairo_t *cr){
