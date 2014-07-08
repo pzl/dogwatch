@@ -124,9 +124,11 @@ void png_view_create(const char *readfile, const char *outfile){
 			posX=0.0;
 			//row beginning label
 			//@todo time value is way off
+			/*
 			timecode(cr,5,lastY,
 						(lastY/REVIEW_ROW_HEIGHT * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL)
 						/(SAMPLE_RATE*1.0));
+			*/
 			cairo_move_to(cr,0,lastY + REVIEW_ROW_HEIGHT/2+0.5);
 			data_config(cr);
 
