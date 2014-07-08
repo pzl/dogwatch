@@ -22,7 +22,6 @@ void png_view_create(const char *readfile, const char *outfile){
 	long long samples_of_silence=0,
 			  samples_seen=0;
 	int i, j, rd,
-		max_rows = 30,
 		quiet_axis_break=0,
 		lastY=0;
 	float posX = 0;
@@ -42,21 +41,21 @@ void png_view_create(const char *readfile, const char *outfile){
 	*/
 
 
-	printf("max rows: %d\n", max_rows);
+	printf("max rows: %d\n", MAX_ROWS);
 
 
-	cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, REVIEW_FILE_WIDTH, REVIEW_ROW_HEIGHT*max_rows + META_ROW_HEIGHT);
+	cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, REVIEW_FILE_WIDTH, REVIEW_ROW_HEIGHT*MAX_ROWS + META_ROW_HEIGHT);
 	cairo_t *cr = cairo_create(surface);
 
 	//background all white
 	cairo_set_source_rgba(cr,1.0,1.0,1.0,1.0);
-	cairo_rectangle(cr,0,0,REVIEW_FILE_WIDTH,bottom(max_rows-1));
+	cairo_rectangle(cr,0,0,REVIEW_FILE_WIDTH,bottom(MAX_ROWS-1));
 	cairo_fill(cr);
 
 	//center lines for each row
 	cairo_set_source_rgba(cr,0.3,0.3,0.3,0.6);
 	cairo_set_line_width(cr,1);
-	for (i=0; i<max_rows; i++){
+	for (i=0; i<MAX_ROWS; i++){
 		cairo_move_to(cr,0, crisp(midline(i)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
@@ -64,7 +63,7 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	//extent/limit lines between rows
 	cairo_set_source_rgba(cr,0.0,0.0,0.0,0.4);
-	for (i=0; i<max_rows; i++){
+	for (i=0; i<MAX_ROWS; i++){
 		cairo_move_to(cr,0, crisp(bottom(i)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
@@ -73,7 +72,7 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	//detector amplitude marker
 	cairo_set_source_rgba(cr,1.0,0.4,0.4,0.4);
-	for (i=0; i<max_rows; i++){
+	for (i=0; i<MAX_ROWS; i++){
 		cairo_move_to(cr,0, crisp(bottom(i) - scale(BARK_THRESHOLD)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 		cairo_move_to(cr,0, crisp(midline(i) + scale(BARK_THRESHOLD - SAMPLE_SILENCE)));
@@ -84,7 +83,7 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	//cooldown/calm amplitude marker
 	cairo_set_source_rgba(cr,0.4,0.8,1.0,0.2);
-	for (i=0; i<max_rows; i++){
+	for (i=0; i<MAX_ROWS; i++){
 		cairo_move_to(cr,0, crisp(bottom(i) - scale(BARK_END)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 		cairo_move_to(cr,0, crisp(midline(i) + scale(BARK_END - SAMPLE_SILENCE)));
@@ -95,7 +94,7 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	//uninteresting noise level
 	cairo_set_source_rgba(cr,0.4,0.8,0.4,0.2);
-	for (i=0; i<max_rows; i++){
+	for (i=0; i<MAX_ROWS; i++){
 		cairo_move_to(cr,0, crisp(bottom(i) - scale(NOISE_OF_INTEREST_LEVEL)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 		cairo_move_to(cr,0, crisp(midline(i) + scale(NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE)));
@@ -134,7 +133,7 @@ void png_view_create(const char *readfile, const char *outfile){
 			cairo_move_to(cr,0,crisp(midline(lastY/REVIEW_ROW_HEIGHT)));
 			data_config(cr);
 
-			if (bottom(lastY/REVIEW_ROW_HEIGHT + 1) > bottom(max_rows-1) ){
+			if (bottom(lastY/REVIEW_ROW_HEIGHT + 1) > bottom(MAX_ROWS-1) ){
 				lastY -= REVIEW_ROW_HEIGHT;
 				break;
 			}
