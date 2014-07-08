@@ -12,8 +12,8 @@ static float bottom(int row);
 static float crisp(float val);
 static void data_config(cairo_t *);
 static void label_config(cairo_t *);
-static void timecode(cairo_t *, float x, float y, float time);
-static void axis_break(cairo_t *, float *x, float y, float time);
+static void timecode(cairo_t *, float x, int row, float time);
+static void axis_break(cairo_t *, float *x, int row, float time);
 static void meta_row(cairo_t *, const char *, dogfile);
 
 
@@ -21,9 +21,9 @@ void png_view_create(const char *readfile, const char *outfile){
 	dogfile d;
 	long long samples_of_silence=0,
 			  samples_seen=0;
-	int i, j, rd,
+	int i, rd,
 		quiet_axis_break=0,
-		lastY=0;
+		row=0;
 	float posX = 0;
 	SAMPLE buf[REVIEW_BUFFER_SIZE];
 	static const double wide_dash[] = {14.0, 6.0},
@@ -63,8 +63,8 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	//extent/limit lines between rows
 	cairo_set_source_rgba(cr,0.0,0.0,0.0,0.4);
-	for (i=0; i<MAX_ROWS; i++){
-		cairo_move_to(cr,0, crisp(bottom(i)));
+	for (row=0; row<MAX_ROWS; row++){
+		cairo_move_to(cr,0, crisp(bottom(row)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
 	cairo_set_dash(cr,wide_dash,1,0);
@@ -72,10 +72,10 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	//detector amplitude marker
 	cairo_set_source_rgba(cr,1.0,0.4,0.4,0.4);
-	for (i=0; i<MAX_ROWS; i++){
-		cairo_move_to(cr,0, crisp(bottom(i) - scale(BARK_THRESHOLD)));
+	for (row=0; row<MAX_ROWS; row++){
+		cairo_move_to(cr,0, crisp(bottom(row) - scale(BARK_THRESHOLD)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
-		cairo_move_to(cr,0, crisp(midline(i) + scale(BARK_THRESHOLD - SAMPLE_SILENCE)));
+		cairo_move_to(cr,0, crisp(midline(row) + scale(BARK_THRESHOLD - SAMPLE_SILENCE)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
 	cairo_set_dash(cr,thin_dash,1,0);
@@ -83,10 +83,10 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	//cooldown/calm amplitude marker
 	cairo_set_source_rgba(cr,0.4,0.8,1.0,0.2);
-	for (i=0; i<MAX_ROWS; i++){
-		cairo_move_to(cr,0, crisp(bottom(i) - scale(BARK_END)));
+	for (row=0; row<MAX_ROWS; row++){
+		cairo_move_to(cr,0, crisp(bottom(row) - scale(BARK_END)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
-		cairo_move_to(cr,0, crisp(midline(i) + scale(BARK_END - SAMPLE_SILENCE)));
+		cairo_move_to(cr,0, crisp(midline(row) + scale(BARK_END - SAMPLE_SILENCE)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
 	cairo_set_dash(cr,thin_dash,1,0);
@@ -94,10 +94,10 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	//uninteresting noise level
 	cairo_set_source_rgba(cr,0.4,0.8,0.4,0.2);
-	for (i=0; i<MAX_ROWS; i++){
-		cairo_move_to(cr,0, crisp(bottom(i) - scale(NOISE_OF_INTEREST_LEVEL)));
+	for (row=0; row<MAX_ROWS; row++){
+		cairo_move_to(cr,0, crisp(bottom(row) - scale(NOISE_OF_INTEREST_LEVEL)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
-		cairo_move_to(cr,0, crisp(midline(i) + scale(NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE)));
+		cairo_move_to(cr,0, crisp(midline(row) + scale(NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE)));
 		cairo_rel_line_to(cr,REVIEW_FILE_WIDTH,0);
 	}
 	cairo_set_dash(cr,thin_dash,1,0);
@@ -116,51 +116,51 @@ void png_view_create(const char *readfile, const char *outfile){
 	cairo_move_to(cr,0,crisp(midline(0)));
 	data_config(cr);
 
-	lastY = META_ROW_HEIGHT;
+	row=0;
 	while ((rd = read_dogfile(&d, buf, REVIEW_BUFFER_SIZE)) > 0){
 
 		//if new row
 		if (posX >= REVIEW_FILE_WIDTH) {
-			lastY+=REVIEW_ROW_HEIGHT;
+			row++;
 			posX=0.0;
 			//row beginning label
 			//@todo time value is way off
 			/*
-			timecode(cr,5,lastY,
-						(lastY/REVIEW_ROW_HEIGHT * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL)
+			timecode(cr,5,row,
+						(row * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL)
 						/(SAMPLE_RATE*1.0));
 			*/
-			cairo_move_to(cr,0,crisp(midline(lastY/REVIEW_ROW_HEIGHT)));
+			cairo_move_to(cr,0,crisp(midline(row)));
 			data_config(cr);
 
-			if (bottom(lastY/REVIEW_ROW_HEIGHT + 1) > bottom(MAX_ROWS-1) ){
-				lastY -= REVIEW_ROW_HEIGHT;
+			if (bottom(row) > bottom(MAX_ROWS-1) ){
+				row--;
 				break;
 			}
 		}
 
 
 		//process samples in buffer
-		for (j=0; j<rd; j++, samples_seen++){
+		for (i=0; i<rd; i++, samples_seen++){
 			//if skipping data due to quietness
 			if (quiet_axis_break){
-				if (buf[j] > NOISE_OF_INTEREST_LEVEL || buf[j] < SAMPLE_SILENCE - (NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE)){
+				if (buf[i] > NOISE_OF_INTEREST_LEVEL || buf[i] < SAMPLE_SILENCE - (NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE)){
 					//broke the silence
 					samples_of_silence=0;
 					quiet_axis_break=0;
-					timecode(cr, posX, lastY, 
-								(lastY/REVIEW_ROW_HEIGHT * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL +
+					timecode(cr, posX, row, 
+								(row * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL +
 								samples_seen)
 								/(SAMPLE_RATE*1.0) );
 					data_config(cr);
-					cairo_move_to(cr,posX, bottom(lastY/REVIEW_ROW_HEIGHT) - scale(buf[j]));
+					cairo_move_to(cr,posX, bottom(row) - scale(buf[i]));
 					posX += 1/(SAMPLES_PER_PIXEL*1.0);
 				} else {
 					//still quiet, move on to next sample
 					continue;
 				}
 			} else {
-				if (buf[j] < NOISE_OF_INTEREST_LEVEL && buf[j] > SAMPLE_SILENCE - (NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE)){
+				if (buf[i] < NOISE_OF_INTEREST_LEVEL && buf[i] > SAMPLE_SILENCE - (NOISE_OF_INTEREST_LEVEL - SAMPLE_SILENCE)){
 					samples_of_silence++;
 				} else {
 					//peaked above NOIL
@@ -170,12 +170,12 @@ void png_view_create(const char *readfile, const char *outfile){
 				if (samples_of_silence >= SEC_OF_QUIET_TILL_SKIP  * SAMPLE_RATE){
 					//been quiet long enough, start breaking the axis
 					quiet_axis_break=1;
-					axis_break(cr,&posX, lastY + REVIEW_ROW_HEIGHT/2,
-						(lastY/REVIEW_ROW_HEIGHT * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
+					axis_break(cr,&posX, row,
+						(row * REVIEW_FILE_WIDTH*SAMPLES_PER_PIXEL + 
 									samples_seen)
 								/(SAMPLE_RATE*1.0));
 				} else {
-					cairo_line_to(cr,posX, bottom(lastY/REVIEW_ROW_HEIGHT) - scale(buf[j]));
+					cairo_line_to(cr,posX, bottom(row) - scale(buf[i]));
 					posX += 1/(SAMPLES_PER_PIXEL*1.0);
 				}
 			}
@@ -187,7 +187,7 @@ void png_view_create(const char *readfile, const char *outfile){
 
 	cairo_stroke(cr);
 
-	cairo_surface_t *surface2 = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,REVIEW_FILE_WIDTH,lastY+REVIEW_ROW_HEIGHT);
+	cairo_surface_t *surface2 = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,REVIEW_FILE_WIDTH,bottom(row));
 	cairo_t *cr2 = cairo_create(surface2);
 	cairo_set_source_surface(cr2,surface,0,0);
 	cairo_paint(cr2);
@@ -235,11 +235,11 @@ static void label_config(cairo_t *cr){
 	cairo_set_source_rgba(cr,0.0,0.0,0.0,1.0);
 }
 
-static void timecode(cairo_t *cr, float x, float y, float t){
+static void timecode(cairo_t *cr, float x, int row, float t){
 	char label[80]; /* @todo guarantee enough length here */
 
 	label_config(cr);
-	cairo_move_to(cr,x,y+13.5);
+	cairo_move_to(cr,x,bottom(row-1)+13.5);
 	if (t < 60.0){
 		sprintf(label, "%-.2fs",t);
 	} else if (t < 3600.0){
@@ -252,7 +252,7 @@ static void timecode(cairo_t *cr, float x, float y, float t){
 	cairo_show_text(cr,label);
 }
 
-static void axis_break(cairo_t *cr, float *x, float y, float t){
+static void axis_break(cairo_t *cr, float *x, int row, float t){
 	int gap = 5,
 		skew = 2,
 		height = 20;
@@ -260,17 +260,17 @@ static void axis_break(cairo_t *cr, float *x, float y, float t){
 	//close any previous paths
 	cairo_stroke(cr);
 
-	timecode(cr,*x-50,y - REVIEW_ROW_HEIGHT/2-0.5,t);
+	timecode(cr,*x-50,row,t);
 
 	cairo_set_source_rgba(cr,0.0,0.0,0.0,0.6);
 	cairo_set_dash(cr,NULL,0,0);
 	cairo_set_line_width(cr,1.5);
 
-	cairo_move_to(cr,*x-skew,y+height);
-	cairo_line_to(cr,*x+skew,y-height);
+	cairo_move_to(cr,*x-skew,midline(row)+height);
+	cairo_line_to(cr,*x+skew,midline(row)-height);
 
-	cairo_move_to(cr,*x+gap-skew,y+height);
-	cairo_line_to(cr,*x+gap+skew,y-height);
+	cairo_move_to(cr,*x+gap-skew,midline(row)+height);
+	cairo_line_to(cr,*x+gap+skew,midline(row)-height);
 	*x += gap+skew;
 	cairo_stroke(cr);
 
