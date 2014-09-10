@@ -19,9 +19,13 @@ INCLUDES = -I.
 #LIBS = -lpthread $(shell pkg-config --libs portaudio-2.0 ncurses)
 LIBS = -lpthread -lm -lportaudio -lncurses
 LIBS += $(shell pkg-config --libs cairo)
-SRCS = $(wildcard $(SRCDIR)/*.c)
+SRCS = $(filter-out $(SRCDIR)/dog2raw.c, $(wildcard $(SRCDIR)/*.c))
 OBJS=$(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 TARGET=dogwatch
+
+HSRC = $(SRCDIR)/dog2raw.c
+HOBJ = $(OBJDIR)/dog2raw.o $(OBJDIR)/audioin.o $(OBJDIR)/file.o
+HTARGT=dog2raw
 
 PREFIX ?= /usr
 BINPREFIX = $(PREFIX)/bin
@@ -31,11 +35,11 @@ ZSHCPL = $(PREFIX)/share/zsh/site-functions
 
 
 all: CFLAGS += -O2
-all: $(TARGET)
+all: $(TARGET) $(HTARGT)
 
 debug: CC = clang
 debug: CFLAGS += -O0 -g -DDEBUG
-debug: $(TARGET)
+debug: $(TARGET) $(HTARGT)
 
 $(OBJS): Makefile
 
@@ -44,6 +48,9 @@ dummy := $(shell test -d $(OBJDIR) || mkdir -p $(OBJDIR))
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(TARGET) $(OBJS) $(LDFLAGS) $(LIBS)
+
+$(HTARGT): $(HOBJ)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(HTARGT) $(HOBJ) $(LDFLAGS) $(LIBS)
 
 install:
 	install -D -m 755  $(TARGET) "$(DESTDIR)$(BINPREFIX)"
@@ -64,7 +71,10 @@ doc:
 $(OBJS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
 	$(CC) $(SFLAGS) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
+$(OBJDIR)/dog2raw.o: $(SRCDIR)/dog2raw.c
+	$(CC) $(SFLAGS) $(CFLAGS) $(INCLUDES) -c -o $@ $<
+
 clean:
-	$(RM) $(OBJS) $(TARGET)
+	$(RM) $(OBJS) $(TARGET) $(HTARGT) $(HOBJ)
 
 .PHONY: all debug install uninstall doc clean
