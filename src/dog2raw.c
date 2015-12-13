@@ -32,7 +32,7 @@ int main(int argc, char **argv){
 	printf("opened dogfile from %s\n", asctime(timeinfo));
 
 	while ((n = read_dogfile(&inf, buf, BUF_BYTES)) > 0){
-		printf("read %d bytes\n", n);
+		//printf("read %d bytes\n", n);
 		fwrite(buf, CHANNELS*sizeof(SAMPLE), n, outfile);
 	}
 
