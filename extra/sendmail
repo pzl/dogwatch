@@ -1,0 +1,7 @@
+#!/bin/bash
+
+curdir="$(dirname "$(readlink -f "$0")")"
+
+source "$curdir"/venv/bin/activate
+
+python -B "$curdir"/alert.py $@

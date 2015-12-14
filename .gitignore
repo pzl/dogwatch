@@ -6,8 +6,12 @@
 *.raw
 *.dog
 *.o
+extra/config.py
+!extra/config.example.py
 a.out
 
 out
 dogwatch
 dog2raw
+venv/
+__pycache__/

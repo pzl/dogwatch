@@ -4,6 +4,7 @@
 #include <semaphore.h>
 #include <time.h>
 #include "audioin.h"
+#include "alert.h"
 #include "detection.h"
 
 unsigned int barks = 0;
@@ -33,6 +34,19 @@ void *detect(void *snd){
 					time(&rawtime);
 					timeinfo = localtime(&rawtime);
 					printf("barked! %s", asctime(timeinfo));
+
+					switch (barks){
+						case 2000:
+						case 1500:
+						case 1200:
+						case 750:
+						case 500:
+						case 300:
+						case 100:
+						case 10:
+							printf("sending alert\n");
+							alert(barks);
+					}
 				}
 			} else {
 				if (abs(data->recorded[data->pstart+i] - SAMPLE_SILENCE) <= BARK_END - SAMPLE_SILENCE){
